@@ -51,8 +51,8 @@ module.exports = {
     {
       name: 'headoffice',
       cwd: './Code/HeadOffice',
-      script: 'npx',
-      args: 'http-server dist/angular-boilerplate/browser -p 3010 -c-1 --cors -g',
+      script: 'http-server',
+      args: 'dist/angular-boilerplate/browser -p 3010 -c-1 --cors -g',
       instances: 1,
       exec_mode: 'fork',
       env: {
@@ -77,8 +77,8 @@ module.exports = {
     {
       name: 'client',
       cwd: './Code/Client',
-      script: 'npx',
-      args: 'http-server dist/angular-boilerplate/browser -p 3011 -c-1 --cors -g',
+      script: 'http-server',
+      args: 'dist/angular-boilerplate/browser -p 3011 -c-1 --cors -g',
       instances: 1,
       exec_mode: 'fork',
       env: {
@@ -103,8 +103,8 @@ module.exports = {
     {
       name: 'merchandiser',
       cwd: './Code/Merchandiser',
-      script: 'npx',
-      args: 'http-server dist/angular-boilerplate/browser -p 3012 -c-1 --cors -g',
+      script: 'http-server',
+      args: 'dist/angular-boilerplate/browser -p 3012 -c-1 --cors -g',
       instances: 1,
       exec_mode: 'fork',
       env: {

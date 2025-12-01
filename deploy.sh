@@ -47,12 +47,12 @@ fi
 
 if ! command_exists pm2; then
     echo -e "${YELLOW}PM2 is not installed. Installing globally...${NC}"
-    npm install -g pm2
+    sudo npm install -g pm2
 fi
 
-if ! command_exists yarn; then
-    echo -e "${YELLOW}Yarn is not installed. Installing globally...${NC}"
-    npm install -g yarn
+if ! command_exists http-server; then
+    echo -e "${YELLOW}http-server is not installed. Installing globally...${NC}"
+    sudo npm install -g http-server
 fi
 
 echo -e "${GREEN}All prerequisites met!${NC}"
@@ -81,7 +81,7 @@ cd "$CODE_DIR/HeadOffice"
 
 if [ ! -d "node_modules" ]; then
     echo -e "${YELLOW}Installing HeadOffice dependencies...${NC}"
-    yarn install
+    npm install
 fi
 
 echo -e "${YELLOW}Building HeadOffice...${NC}"
@@ -97,7 +97,7 @@ cd "$CODE_DIR/Client"
 
 if [ ! -d "node_modules" ]; then
     echo -e "${YELLOW}Installing Client dependencies...${NC}"
-    yarn install
+    npm install
 fi
 
 echo -e "${YELLOW}Building Client...${NC}"
@@ -113,7 +113,7 @@ cd "$CODE_DIR/Merchandiser"
 
 if [ ! -d "node_modules" ]; then
     echo -e "${YELLOW}Installing Merchandiser dependencies...${NC}"
-    yarn install
+    npm install
 fi
 
 echo -e "${YELLOW}Building Merchandiser...${NC}"
