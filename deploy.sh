@@ -85,9 +85,25 @@ if [ ! -f ".env" ]; then
     echo -e "${YELLOW}⚠️  Please update .env with your database credentials${NC}"
 fi
 
-# Run migrations
-echo -e "${YELLOW}Running database migrations...${NC}"
-npm run migration:run || true
+# For initial setup, use DATABASE_SYNCHRONIZE=true to auto-create tables
+echo -e "${YELLOW}Enabling DATABASE_SYNCHRONIZE for initial setup...${NC}"
+sed -i 's/DATABASE_SYNCHRONIZE=false/DATABASE_SYNCHRONIZE=true/' .env || true
+
+# Start the app once to auto-create all tables
+echo -e "${YELLOW}Running backend once to create database schema...${NC}"
+timeout 30 npm run start:prod &
+sleep 15
+wait $! 2>/dev/null || true
+
+# Disable DATABASE_SYNCHRONIZE for production
+echo -e "${YELLOW}Disabling DATABASE_SYNCHRONIZE for production...${NC}"
+sed -i 's/DATABASE_SYNCHRONIZE=true/DATABASE_SYNCHRONIZE=false/' .env || true
+
+# Load seed data
+echo -e "${YELLOW}Loading initial seed data...${NC}"
+if [ -f "../../Datenbank/db.sql" ]; then
+    sudo -u postgres psql -d akzente -f ../../Datenbank/db.sql 2>/dev/null || true
+fi
 
 echo -e "${GREEN}Database setup complete!${NC}"
 
