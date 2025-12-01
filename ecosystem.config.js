@@ -23,10 +23,12 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         APP_PORT: 4010,
+        NODE_OPTIONS: '--require crypto',
       },
       env_production: {
         NODE_ENV: 'production',
         APP_PORT: 4010,
+        NODE_OPTIONS: '--require crypto',
       },
       // Logging
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
