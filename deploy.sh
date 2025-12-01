@@ -65,7 +65,7 @@ cd "$CODE_DIR/Backend"
 
 if [ ! -d "node_modules" ]; then
     echo -e "${YELLOW}Installing backend dependencies...${NC}"
-    npm install
+    npm install --legacy-peer-deps
 fi
 
 echo -e "${YELLOW}Building backend...${NC}"
@@ -81,7 +81,7 @@ cd "$CODE_DIR/HeadOffice"
 
 if [ ! -d "node_modules" ]; then
     echo -e "${YELLOW}Installing HeadOffice dependencies...${NC}"
-    npm install
+    npm install --legacy-peer-deps
 fi
 
 echo -e "${YELLOW}Building HeadOffice...${NC}"
@@ -97,7 +97,7 @@ cd "$CODE_DIR/Client"
 
 if [ ! -d "node_modules" ]; then
     echo -e "${YELLOW}Installing Client dependencies...${NC}"
-    npm install
+    npm install --legacy-peer-deps
 fi
 
 echo -e "${YELLOW}Building Client...${NC}"
@@ -113,7 +113,7 @@ cd "$CODE_DIR/Merchandiser"
 
 if [ ! -d "node_modules" ]; then
     echo -e "${YELLOW}Installing Merchandiser dependencies...${NC}"
-    npm install
+    npm install --legacy-peer-deps
 fi
 
 echo -e "${YELLOW}Building Merchandiser...${NC}"
