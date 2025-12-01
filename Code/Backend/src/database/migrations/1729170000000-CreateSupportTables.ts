@@ -16,7 +16,7 @@ export class CreateSupportTables1729170000000 implements MigrationInterface {
       )`,
     );
 
-    // Create support_mails table
+    // Create support_mails table WITHOUT foreign key (will be added later)
     await queryRunner.query(
       `CREATE TABLE "support_mails" (
         "id" SERIAL NOT NULL,
@@ -29,16 +29,6 @@ export class CreateSupportTables1729170000000 implements MigrationInterface {
       )`,
     );
 
-    // Add foreign key constraint
-    await queryRunner.query(
-      `ALTER TABLE "support_mails"
-       ADD CONSTRAINT "FK_support_mails_client"
-       FOREIGN KEY ("client_id")
-       REFERENCES "client"("id")
-       ON DELETE CASCADE
-       ON UPDATE NO ACTION`,
-    );
-
     // Create index on client_id for faster lookups
     await queryRunner.query(
       `CREATE INDEX "IDX_support_mails_client_id" ON "support_mails" ("client_id")`,
@@ -49,14 +39,10 @@ export class CreateSupportTables1729170000000 implements MigrationInterface {
     // Drop index
     await queryRunner.query(`DROP INDEX "IDX_support_mails_client_id"`);
 
-    // Drop foreign key constraint
-    await queryRunner.query(
-      `ALTER TABLE "support_mails" DROP CONSTRAINT "FK_support_mails_client"`,
-    );
-
     // Drop tables
     await queryRunner.query(`DROP TABLE "support_mails"`);
     await queryRunner.query(`DROP TABLE "support"`);
   }
 }
+
 
