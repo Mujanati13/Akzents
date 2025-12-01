@@ -1,0 +1,54 @@
+<div class="flex gap-x-4 h-[600px]">
+  <!-- Map Container -->
+  <div class="w-full h-full rounded-xl overflow-hidden flex-1 relative">
+    <!-- Loading overlay -->
+    <div *ngIf="loading" class="absolute inset-0 bg-white bg-opacity-75 flex flex-col justify-center items-center z-50 rounded-xl">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+      <p class="mt-4 text-gray-600">Lade Karte...</p>
+    </div>
+    <div id="map" class="w-full h-full rounded-xl overflow-hidden"></div>
+  </div>
+
+  <!-- Sidebar Filter Panel (similar to grid view) -->
+  <aside class="w-64 bg-white h-fit">
+    <h2 class="text-gray-800 font-medium mb-4 text-[13.55px]">Filter by:</h2>
+
+     <!-- Qualification section -->
+  <div class="mb-5">
+    <div class="flex justify-between items-center mb-3 text-sm sm:text-[13.55px]">
+      <h3 class="text-gray-800 font-medium">Qualifikation</h3>
+      <button class="text-primary-500 text-xs sm:text-sm" (click)="resetQualifications()">Reset</button>
+    </div>
+
+    <div class="flex flex-col gap-y-2 mb-5 text-xs sm:text-[14px] max-h-[300px] overflow-y-auto pr-2">
+      <button
+        *ngFor="let qual of filters.qualifications | keyvalue"
+        (click)="toggleQualification(qual.key)"
+        class="border-2 rounded-lg sm:rounded-[13.55px] py-2 text-center text-primary-500 h-10 sm:h-[46px] cursor-pointer flex-shrink-0"
+        [ngClass]="{ 'border-primary-500': qual.value, 'border-gray-100': !qual.value }"
+      >
+        {{ qual.key }}
+      </button>
+    </div>
+  </div>
+
+    <!-- Status section -->
+    <div>
+      <div class="flex justify-between items-center mb-3 text-[13.55px]">
+        <h3 class="text-gray-800 font-medium">Status</h3>
+        <button class="text-primary-500" (click)="resetStatus()">Reset</button>
+      </div>
+
+      <div class="flex flex-col gap-y-2 text-[14px]">
+        <button
+          *ngFor="let stat of filters.status | keyvalue"
+          (click)="toggleStatus(stat.key)"
+          class="border-2 rounded-[13.55px] py-2 text-center text-primary-500 h-[46px] cursor-pointer"
+          [ngClass]="{ 'border-primary-500': stat.value, 'border-gray-100': !stat.value }"
+        >
+          {{ stat.key }}
+        </button>
+      </div>
+    </div>
+  </aside>
+</div>

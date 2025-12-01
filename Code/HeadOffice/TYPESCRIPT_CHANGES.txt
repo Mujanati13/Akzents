@@ -1,0 +1,53 @@
+// ADD TO: src/app/pages/clients/report-edit/report-edit.component.ts
+// After existing imports (line 6)
+
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+
+// ADD THESE METHODS to the ReportEditComponent class 
+// (before saveReportPhotos() method around line 585)
+
+getVorherImages(photoIndex: number): ImageItem[] {
+  if (photoIndex === 0) {
+    return this.prepopulatedVorherImages1;
+  } else if (photoIndex === 2) {
+    return this.prepopulatedVorherImages3;
+  }
+  return [];
+}
+
+getNachherImages(photoIndex: number): ImageItem[] {
+  if (photoIndex === 0) {
+    return this.prepopulatedNachherImages1;
+  } else if (photoIndex === 2) {
+    return this.prepopulatedNachherImages3;
+  }
+  return [];
+}
+
+getNachherOnlyImages(photoIndex: number): ImageItem[] {
+  if (photoIndex === 1) {
+    return this.prepopulatedNachherImages2;
+  }
+  return [];
+}
+
+onVorherDropped(event: CdkDragDrop<ImageItem[]>, photoIndex: number): void {
+  if (event.previousContainer === event.container) {
+    moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+    console.log(\Vorher images reordered for photo \:\, event.container.data);
+  }
+}
+
+onNachherDropped(event: CdkDragDrop<ImageItem[]>, photoIndex: number): void {
+  if (event.previousContainer === event.container) {
+    moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+    console.log(\Nachher images reordered for photo \:\, event.container.data);
+  }
+}
+
+onNachherOnlyDropped(event: CdkDragDrop<ImageItem[]>, photoIndex: number): void {
+  if (event.previousContainer === event.container) {
+    moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+    console.log(\Nachher only images reordered for photo \:\, event.container.data);
+  }
+}

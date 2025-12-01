@@ -1,0 +1,319 @@
+<div class="min-h-screen flex items-center justify-center bg-white relative pt-4 py-18 lg: py-0">
+  <div class="bg-[#FBFBFB] border border-[#EBEBEB] rounded-xl px-8 md:px-[86px] py-4 lg:py-[40px] w-[90vw] md:w-[874px] shadow-sm relative flex-col">
+    <!-- Logo and Title Row -->
+    <div class="flex items-end justify-between mb-8">
+      <div class="flex items-center gap-2">
+        <app-icon name="einloggen" class="w-7 h-7 text-primary-500 flex items-center" />
+        <span class="text-base lg:text-[30px] font-dm font-black text-gray-700" translate>Neu registrieren</span>
+      </div>
+      <img src="/logo.png" alt="Akzente Logo" class="h-[50px] md:h-[100px] mb-1" />
+    </div>
+
+    <!-- Registration Stepper -->
+    <form [formGroup]="userForm">
+      <p-stepper [(value)]="activeStep" class="w-full">
+        <p-step-list>
+          <p-step [value]="1" class="flex flex-row flex-auto">
+            <ng-template #content let-activateCallback="activateCallback" let-value="value">
+              <button class="bg-transparent border-0 inline-flex flex-col gap-2 items-center relative" (click)="activateCallback()">
+                <span
+                  class="rounded-full w-9 lg:w-12 h-9 lg:h-12 inline-flex items-center justify-center"
+                  [ngClass]="{
+                    'bg-primary-500 text-white border-2 border-primary-500': value === activeStep,
+                    'bg-[#E9EBFB] text-primary-500 border-2 border-primary-500': value < activeStep,
+                    'border-2 border-gray-300 text-gray-400': value > activeStep,
+                  }"
+                >
+                  <ng-container *ngIf="value < activeStep; else stepNumber">
+                    <app-icon name="stepper-check" class="text-primary-500 flex items-center h-4.5 w-4.5"></app-icon>
+                  </ng-container>
+                  <ng-template #stepNumber>
+                    {{ ('0' + value).slice(-2) }}
+                  </ng-template>
+                </span>
+                <span class="text-sm absolute -bottom-6" [ngClass]="{ 'text-primary-500': value <= activeStep }">Persönliches</span>
+              </button>
+            </ng-template>
+          </p-step>
+
+          <p-step [value]="2" class="flex flex-row flex-auto">
+            <ng-template #content let-activateCallback="activateCallback" let-value="value">
+              <button class="bg-transparent border-0 inline-flex flex-col gap-2 items-center relative" (click)="activateCallback()">
+                <span
+                  class="rounded-full w-9 lg:w-12 h-9 lg:h-12 inline-flex items-center justify-center"
+                  [ngClass]="{
+                    'bg-primary-500 text-white border-2 border-primary-500': value === activeStep,
+                    'bg-[#E9EBFB] text-primary-500 border-2 border-primary-500': value < activeStep,
+                    'border-2 border-gray-300 text-gray-400': value > activeStep,
+                  }"
+                >
+                  <ng-container *ngIf="value < activeStep; else stepNumber">
+                    <app-icon name="stepper-check" class="text-primary-500 flex items-center h-4.5 w-4.5"></app-icon>
+                  </ng-container>
+                  <ng-template #stepNumber>
+                    {{ ('0' + value).slice(-2) }}
+                  </ng-template>
+                </span>
+                <span class="text-sm absolute -bottom-6" [ngClass]="{ 'text-primary-500': value <= activeStep }">Qualifikationen</span>
+              </button>
+            </ng-template>
+          </p-step>
+
+          <p-step [value]="3">
+            <ng-template #content let-activateCallback="activateCallback" let-value="value">
+              <button class="bg-transparent border-0 inline-flex flex-col gap-2 items-center relative" (click)="activateCallback()">
+                <span
+                  class="rounded-full w-9 lg:w-12 h-9 lg:h-12 inline-flex items-center justify-center"
+                  [ngClass]="{
+                    'bg-primary-500 text-white border-2 border-primary-500': value === activeStep,
+                    'bg-[#E9EBFB] text-primary-500 border-2 border-primary-500': value < activeStep,
+                    'border-2 border-gray-300 text-gray-400': value > activeStep,
+                  }"
+                >
+                  <ng-container *ngIf="value < activeStep; else stepNumber">
+                    <app-icon name="stepper-check" class="text-primary-500 flex items-center h-4.5 w-4.5"></app-icon>
+                  </ng-container>
+                  <ng-template #stepNumber>
+                    {{ ('0' + value).slice(-2) }}
+                  </ng-template>
+                </span>
+                <span class="text-sm absolute -bottom-6" [ngClass]="{ 'text-primary-500': value <= activeStep }">Passwort</span>
+              </button>
+            </ng-template>
+          </p-step>
+        </p-step-list>
+
+        <p-step-panels>
+          <!-- Step 1: Personal Information -->
+          <p-step-panel [value]="1">
+            <ng-template #content let-activateCallback="activateCallback">
+              <div class="min-h-[20rem] flex flex-col justify-center">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="mb-4">
+                    <p-iftalabel>
+                      <input
+                        pInputText
+                        id="firstName"
+                        formControlName="firstName"
+                        autocomplete="given-name"
+                        required
+                        class="w-full py-3 border border-gray-300 focus:outline-none text-gray-700 bg-white"
+                      />
+                      <label for="firstName">Vorname</label>
+                    </p-iftalabel>
+                    <small *ngIf="userForm.get('firstName')?.invalid && userForm.get('firstName')?.touched" class="text-red-500"> Vorname ist erforderlich </small>
+                  </div>
+
+                  <div class="mb-4">
+                    <p-iftalabel>
+                      <input
+                        pInputText
+                        id="lastName"
+                        formControlName="lastName"
+                        autocomplete="family-name"
+                        required
+                        class="w-full py-3 border border-gray-300 focus:outline-none text-gray-700 bg-white"
+                      />
+                      <label for="lastName">Name</label>
+                    </p-iftalabel>
+                    <small *ngIf="userForm.get('lastName')?.invalid && userForm.get('lastName')?.touched" class="text-red-500"> Name ist erforderlich </small>
+                  </div>
+
+                  <div class="mb-4">
+                    <p-iftalabel>
+                      <input pInputText id="email" formControlName="email" autocomplete="email" required class="w-full py-3 border border-gray-300 focus:outline-none text-gray-700 bg-white" />
+                      <label for="email">E-Mail</label>
+                    </p-iftalabel>
+                    <small *ngIf="userForm.get('email')?.invalid && userForm.get('email')?.touched" class="text-red-500"> Gültige E-Mail ist erforderlich </small>
+                  </div>
+
+                  <div class="mb-4">
+                    <p-iftalabel>
+                      <input pInputText id="phone" formControlName="phone" autocomplete="tel" class="w-full py-3 border border-gray-300 focus:outline-none text-gray-700 bg-white" />
+                      <label for="phone">Mobilnummer</label>
+                    </p-iftalabel>
+                  </div>
+
+                  <!-- Location fields - PLZ, Land, City in proper grid -->
+                  <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <p-iftalabel>
+                      <input pInputText id="zipCode" formControlName="zipCode" autocomplete="postal-code" class="w-full py-3 border border-gray-300 focus:outline-none text-gray-700 bg-white" />
+                      <label for="zipCode">PLZ</label>
+                    </p-iftalabel>
+                    <p-iftalabel>
+                      <p-dropdown id="country" formControlName="country" [options]="countryOptions" optionLabel="name" optionValue="id" placeholder="Land auswählen" class="w-full"> </p-dropdown>
+                      <label for="country">Land*</label>
+                    </p-iftalabel>
+                  </div>
+                  <div class="mb-4">
+                    <p-iftalabel>
+                      <p-dropdown id="city" formControlName="city" [options]="cityOptions" optionLabel="name" optionValue="id" placeholder="Stadt auswählen" [loading]="isLoadingCities" class="w-full">
+                      </p-dropdown>
+                      <label for="city">Stadt</label>
+                    </p-iftalabel>
+                  </div>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button
+                  [routerLink]="['/login']"
+                  class="w-full border border-primary-500 hover:bg-primary-700/10 text-primary-500 font-dm text-[14px] rounded-md py-3 mt-2 transition-colors duration-200 cursor-pointer"
+                >
+                  {{ 'Login' | translate }}
+                </button>
+                <button (click)="goToStep(2)" class="w-full bg-primary-500 hover:bg-primary-700 text-white font-dm text-[14px] rounded-md py-3 mt-2 transition-colors duration-200 cursor-pointer">
+                  {{ 'Nächste' | translate }}
+                </button>
+              </div>
+              <div *ngIf="stepErrors[1]" class="mt-2 text-red-600 text-sm text-center">
+                {{ stepErrors[1] }}
+              </div>
+            </ng-template>
+          </p-step-panel>
+
+          <!-- Step 2: Qualifications (Dynamic Customer Selection) -->
+          <p-step-panel [value]="2">
+            <ng-template #content let-activateCallback="activateCallback">
+              <div class="min-h-[20rem] flex flex-col justify-center">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" formGroupName="customers">
+                  <!-- Dynamic job types from API -->
+                  <ng-container *ngFor="let jobType of jobTypes; let i = index">
+                    <ng-container *ngIf="toCamelCase(jobType.name) as controlName">
+                      <div
+                        class="border border-[#DCDCDC] rounded-md p-3 flex items-center justify-between h-[60px] cursor-pointer"
+                        [class.border-blue-600]="userForm.get('customers')?.get(controlName)?.value"
+                        [class.shadow-selected]="userForm.get('customers')?.get(controlName)?.value"
+                        (click)="toggleCustomerSelection(controlName)"
+                      >
+                        <span>{{ jobType.name }}</span>
+                        <p-checkbox [formControlName]="controlName" (click)="toggleCustomerSelection(controlName)" [binary]="true" [inputId]="controlName" (onClick)="$event.stopPropagation()"> </p-checkbox>
+                      </div>
+                    </ng-container>
+                  </ng-container>
+
+                  <!-- Loading state while job types are being fetched -->
+                  <div *ngIf="isLoading" class="col-span-2 text-center py-8">
+                    <i class="pi pi-spin pi-spinner text-primary-500 text-xl"></i>
+                    <p class="text-gray-600 mt-2">Lade Qualifikationen...</p>
+                  </div>
+
+                  <!-- Fallback if no job types available -->
+                  <div *ngIf="!isLoading && jobTypes.length === 0" class="col-span-2 text-center py-8">
+                    <p class="text-gray-600">Keine Qualifikationen verfügbar.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button
+                  (click)="goToStep(1)"
+                  class="w-full border border-primary-500 hover:bg-primary-700/10 text-primary-500 font-dm text-[14px] rounded-md py-3 mt-2 transition-colors duration-200 cursor-pointer"
+                >
+                  {{ 'Vorherige' | translate }}
+                </button>
+                <button (click)="goToStep(3)" class="w-full bg-primary-500 hover:bg-primary-700 text-white font-dm text-[14px] rounded-md py-3 mt-2 transition-colors duration-200 cursor-pointer">
+                  {{ 'Nächste' | translate }}
+                </button>
+              </div>
+              <div *ngIf="stepErrors[2]" class="mt-2 text-red-600 text-sm text-center">
+                {{ stepErrors[2] }}
+              </div>
+            </ng-template>
+          </p-step-panel>
+
+          <!-- Step 3: Password -->
+          <p-step-panel [value]="3">
+            <ng-template #content let-activateCallback="activateCallback">
+              <div class="min-h-[20rem] flex flex-col justify-center">
+                <div class="mb-4">
+                  <p-inputgroup>
+                    <p-inputgroup-addon>
+                      <app-icon name="einloggen-password" class="w-5 h-5 text-primary-500 flex items-center" />
+                    </p-inputgroup-addon>
+                    <p-floatlabel variant="in">
+                      <input
+                        pInputText
+                        id="password"
+                        formControlName="password"
+                        [type]="showPassword ? 'text' : 'password'"
+                        autocomplete="new-password"
+                        required
+                        class="w-full pr-10 py-3 border border-x-0 border-gray-300 focus:outline-none text-gray-700 bg-white"
+                      />
+                      <label for="password">Passwort</label>
+                    </p-floatlabel>
+                    <p-inputgroup-addon class="cursor-pointer" (click)="toggleShowPassword()">
+                      <i [ngClass]="['pi', showPassword ? 'pi-eye-slash' : 'pi-eye', 'text-gray-400']"></i>
+                    </p-inputgroup-addon>
+                  </p-inputgroup>
+                  <small *ngIf="userForm.get('password')?.invalid && userForm.get('password')?.touched" class="text-red-500"> Passwort muss mindestens 6 Zeichen lang sein </small>
+                </div>
+
+                <div class="mb-4">
+                  <p-inputgroup>
+                    <p-inputgroup-addon>
+                      <app-icon name="einloggen-password" class="w-5 h-5 text-primary-500 flex items-center" />
+                    </p-inputgroup-addon>
+                    <p-floatlabel variant="in">
+                      <input
+                        pInputText
+                        id="confirmPassword"
+                        formControlName="confirmPassword"
+                        [type]="showPassword ? 'text' : 'password'"
+                        autocomplete="new-password"
+                        required
+                        class="w-full pr-10 py-3 border border-l-0 border-gray-300 focus:outline-none text-gray-700 bg-white"
+                      />
+                      <label for="confirmPassword">Passwort bestätigen</label>
+                    </p-floatlabel>
+                  </p-inputgroup>
+                  <small *ngIf="userForm.hasError('passwordMismatch') && userForm.get('confirmPassword')?.touched" class="text-red-500">Passwörter stimmen nicht überein</small>
+                </div>
+
+                <div *ngIf="loginError" class="mt-2 text-red-600 text-sm font-medium text-center">
+                  {{ loginError }}
+                </div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button
+                  (click)="goToStep(2)"
+                  class="w-full border border-primary-500 hover:bg-primary-700/10 text-primary-500 font-dm text-[14px] rounded-md py-3 mt-2 transition-colors duration-200 cursor-pointer"
+                >
+                  {{ 'Vorherige' | translate }}
+                </button>
+                <button
+                  (click)="register()"
+                  [disabled]="userForm.invalid || isRegistering"
+                  [class.opacity-50]="userForm.invalid || isRegistering"
+                  class="w-full bg-primary-500 hover:bg-primary-700 text-white font-dm text-[14px] rounded-md py-3 mt-2 transition-colors duration-200 cursor-pointer"
+                >
+                  <span *ngIf="!isRegistering">{{ 'Registrierung abschließen' | translate }}</span>
+                  <span *ngIf="isRegistering" class="flex items-center justify-center">
+                    <i class="pi pi-spin pi-spinner mr-2"></i>
+                    {{ 'Wird verarbeitet...' | translate }}
+                  </span>
+                </button>
+              </div>
+              <div *ngIf="stepErrors[3]" class="mt-2 text-red-600 text-sm text-center">
+                {{ stepErrors[3] }}
+              </div>
+            </ng-template>
+          </p-step-panel>
+        </p-step-panels>
+      </p-stepper>
+    </form>
+  </div>
+
+  <div class="lang-selector absolute bottom-6 right-6">
+    <app-language-selector [openAbove]="true"></app-language-selector>
+  </div>
+</div>
+
+<!-- Email verification toast template -->
+<ng-template #emailVerificationToast let-toastRef>
+  <div class="flex items-center gap-3">
+    <span class="rounded-full w-8 h-8 inline-flex items-center justify-center bg-[#E9EBFB] border-2 border-primary-500 flex-shrink-0">
+      <app-icon name="stepper-check" class="text-primary-500 h-3 w-3 flex items-center"></app-icon>
+    </span>
+    <span class="text-gray-800 font-medium">Die E-Mail muss zuerst validiert werden</span>
+  </div>
+</ng-template>

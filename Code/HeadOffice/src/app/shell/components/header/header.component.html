@@ -1,0 +1,26 @@
+<nav class="bg-white h-[78px] px-4 flex items-center justify-between">
+  <!-- Left Side: Hamburger Menu (Mobile) and Title -->
+  <div class="flex items-center">
+    <!-- Hamburger Menu (Mobile Only) -->
+    <button (click)="toggleSidebar()" class="mr-3 p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none md:hidden">
+      <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+
+    <!-- Language Selector -->
+    <app-language-selector></app-language-selector>
+  </div>
+
+  <!-- Right Side: Client Logo, Search, Notifications, User Profile -->
+  <div class="flex items-center space-x-4">
+    <!-- Client Logo - Show only when a client is active -->
+    <div *ngIf="currentClient" class="flex items-center gap-3">
+      <div class="h-10 flex items-center px-3 py-1">
+        <img [src]="clientLogo || '/images/placeholder.png'" [alt]="currentClient?.name" class="h-[47px] max-w-[120px] object-contain" />
+      </div>
+    </div>
+
+    <!-- ...existing code... -->
+  </div>
+</nav>

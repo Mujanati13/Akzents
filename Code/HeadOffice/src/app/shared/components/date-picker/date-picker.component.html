@@ -1,0 +1,95 @@
+<div class="relative">
+  <div class="relative">
+    <!-- Input trigger -->
+    <div
+      class="h-[54px] px-4 border border-gray-300 rounded-md font-inter text-sm w-full text-gray-600 focus:outline-none focus:ring-0 focus:border-primary-500 flex items-center justify-between cursor-pointer"
+      (click)="togglePicker()"
+    >
+      <span *ngIf="!selectedDate" class="text-gray-400">Datum</span>
+      <span *ngIf="selectedDate">{{ selectedDate | euDate }}</span>
+      <div class="flex items-center gap-x-2">
+        <button *ngIf="selectedDate" class="focus:outline-none bg-gray-100 rounded-full p-1 hover:bg-gray-200 transition duration-200 ease-in-out cursor-pointer" (click)="clearDate($event)">
+          <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <app-icon name="calendar" class="w-[19px] h-[19px] text-primary-500" />
+      </div>
+    </div>
+
+    <!-- Picker dropdown -->
+    <div *ngIf="showPicker" class="absolute z-10 mt-1 bg-white shadow-lg rounded-md w-auto">
+      <!-- Calendar -->
+      <div>
+        <div class="grid grid-cols-2 items-center gap-x-2 p-2">
+          <div class="relative bg-primary-500 text-white px-2 py-1">
+            <select
+              class="text-sm appearance-none bg-transparent pr-6 pl-2 py-1 text-white focus:outline-none cursor-pointer"
+              [ngModel]="currentMonth.getMonth()"
+              (ngModelChange)="changeCurrentMonth($event)"
+            >
+              <option class="text-black" *ngFor="let month of months" [value]="month.value">{{ month.name }}</option>
+            </select>
+            <div class="absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none">
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </div>
+          </div>
+
+          <div class="relative bg-primary-500 text-white px-2 py-1">
+            <select
+              class="text-sm appearance-none bg-transparent pr-6 pl-2 py-1 text-white focus:outline-none cursor-pointer"
+              [ngModel]="currentMonth.getFullYear()"
+              (ngModelChange)="changeCurrentYear($event)"
+            >
+              <option class="text-black" *ngFor="let year of years" [value]="year">{{ year }}</option>
+            </select>
+            <div class="absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none">
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <table class="w-full">
+          <thead>
+            <tr class="text-[9px] text-gray-500">
+              <th class="w-10 h-4">Mon</th>
+              <th class="w-10 h-4">Tue</th>
+              <th class="w-10 h-4">Wed</th>
+              <th class="w-10 h-4">Thu</th>
+              <th class="w-10 h-4">Fri</th>
+              <th class="w-10 h-4">Sat</th>
+              <th class="w-10 h-4">Sun</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let week of getWeeksForMonth(currentMonth.getFullYear(), currentMonth.getMonth()); let i = index; trackBy: trackByWeekIndex">
+              <td *ngFor="let day of week; let j = index; trackBy: trackByDayIndex" class="text-center p-1">
+                <button
+                  *ngIf="day; else emptyDay"
+                  class="w-8 h-7 text-[11px] flex items-start justify-start p-0.5 cursor-pointer bg-[#F2F2F2]"
+                  [ngClass]="{
+                    'bg-primary-500 text-white': isSelectedDate(day),
+                    'hover:bg-gray-100': !isSelectedDate(day),
+                    'font-medium': day.getMonth() === currentMonth.getMonth(),
+                    'text-gray-400': day.getMonth() !== currentMonth.getMonth(),
+                  }"
+                  (click)="handleDateClick(day)"
+                  [attr.data-date]="day.toISOString()"
+                >
+                  {{ day.getDate() }}
+                </button>
+                <ng-template #emptyDay>
+                  <div class="w-8 h-7 bg-[#E0E2E1]"></div>
+                </ng-template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

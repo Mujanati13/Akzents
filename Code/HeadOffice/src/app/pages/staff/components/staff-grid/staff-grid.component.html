@@ -1,0 +1,177 @@
+<div class="flex flex-col lg:flex-row gap-4 lg:gap-x-4">
+  <!-- Staff Grid -->
+  <div class="flex-1 order-2 lg:order-1">
+    <!-- Loading state -->
+    <div *ngIf="loading" class="flex flex-col justify-center items-center py-20">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+      <p class="mt-4 text-gray-600">Lade Personal...</p>
+    </div>
+    
+    <!-- Empty state message -->
+    <div *ngIf="!loading && paginatedData.length === 0" class="flex justify-center items-center py-20">
+      <p class="text-gray-500 text-lg">Keine Einträge gefunden.</p>
+    </div>
+    
+    <!-- Staff Grid -->
+    <div *ngIf="!loading && paginatedData.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 mb-6">
+      <!-- Staff Item -->
+      <div *ngFor="let staff of paginatedData" class="bg-white rounded-2xl shadow flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-x-3 px-3 sm:px-4 py-3 min-h-[140px]">
+        <!-- Staff Image -->
+        <a
+          [routerLink]="['/staff', staff.id]"
+          [queryParams]="getNavigationQueryParams()"
+          class="w-[85px] h-[100px] sm:w-[105px] sm:h-[113px] rounded-[14px] overflow-hidden flex-shrink-0 bg-gray-50 cursor-pointer hover:opacity-90 transition-opacity block self-center sm:self-auto"
+        >
+          <img
+            [src]="staff?.portrait?.path || 'https://st2.depositphotos.com/1010683/7109/i/450/depositphotos_71090693-stock-photo-caucasian-handsome-man-in-grey.jpg'"
+            alt="{{ staff.firstName }} {{ staff.lastName }}"
+            class="w-full h-full object-cover"
+          />
+        </a>
+
+        <!-- Staff Info -->
+        <div class="flex flex-col gap-y-1 sm:gap-y-[6px] flex-1 min-w-0 w-full">
+          <div class="flex items-start mb-0.5 sm:mb-0 gap-x-1 sm:gap-x-1.5 flex-wrap">
+            <a [routerLink]="['/staff', staff.id]" [queryParams]="getNavigationQueryParams()" 
+              class="text-primary-500 font-semibold text-[11px] sm:text-[12px] leading-tight cursor-pointer hover:underline truncate min-w-0 flex-1"
+              [title]="staff.firstName + ' ' + staff.lastName"
+              >{{ staff.firstName }} {{ staff.lastName }}</a
+            >
+            <span class="px-2 sm:px-3 py-0.5 text-[8px] sm:text-[10px] font-semibold text-white bg-primary-500 rounded-md flex-shrink-0 whitespace-nowrap leading-tight ml-auto uppercase tracking-wide"> {{ staff.status || 'Neu' }} </span>
+          </div>
+          <div class="text-gray-500 text-[8px] sm:text-[9px] whitespace-nowrap mb-0.5 sm:mb-1">Geb. {{ staff.dateOfBirth | euDate }}</div>
+          <div class="flex-col gap-y-2 sm:gap-y-[18px]">
+            <div class="flex items-end text-[9px] sm:text-[10px]">
+              <div class="text-gray-700 leading-tight">
+                <p class="truncate">{{ staff.address }}</p>
+                <p class="truncate">{{ staff.postalCode }} {{ staff.city }}</p>
+                <p class="truncate">{{ staff.country }}</p>
+              </div>
+            </div>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-1 sm:gap-y-0 leading-tight">
+              <div class="mt-0.5 sm:mt-1 text-gray-500 text-[9px] sm:text-[10px] leading-tight min-w-0 sm:pr-4">
+                <p class="truncate">{{ staff.email }}</p>
+                <p class="truncate">{{ staff.phone }}</p>
+              </div>
+              <div class="flex gap-x-1.5 sm:gap-x-2 flex-shrink-0">
+                <app-icon name="info" class="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer text-primary-500 flex items-center" [title]="staff.qualifications?.join(', ') || 'Keine Angaben'" />
+                <a [routerLink]="['/staff', staff.id]" [queryParams]="getNavigationQueryParams()" class="flex items-center">
+                  <app-icon name="resizeable_eye" class="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer text-primary-500 flex items-center hover:text-primary-600" title="Details ansehen" />
+                </a>
+                <a [href]="'mailto:' + staff.email" title="E-Mail senden">
+                  <app-icon name="envelope" class="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer text-primary-500 flex items-center" title="Urgent Action Required" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Pagination -->
+    <div *ngIf="!loading && paginatedData.length > 0" class="mt-6">
+      <p-paginator
+        #paginator
+        [rows]="rows"
+        [first]="first"
+        [totalRecords]="filteredStaffData.length"
+        [rowsPerPageOptions]="[8, 10, 20, 50, 100]"
+        (onPage)="onPageChange($event)"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Zeige {first} bis {last} von {totalRecords} Einträgen"
+      >
+      </p-paginator>
+    
+    </div>
+  </div>
+  <!-- Sidebar Filter Panel -->
+  <aside class="w-full lg:w-64 bg-white h-fit order-1 lg:order-2 p-4 lg:p-0 rounded-lg lg:rounded-none shadow lg:shadow-none">
+    <h2 class="text-gray-800 font-medium mb-4 text-sm sm:text-[13.55px]">Filter by:</h2>
+
+    <!-- Input fields -->
+    <div class="mb-3">
+      <input
+        type="text"
+        [(ngModel)]="filters.firstName"
+        (ngModelChange)="first = 0; applyFilters()"
+        class="w-full h-10 sm:h-[46px] border border-gray-300 rounded-lg sm:rounded-[13.55px] px-3 py-2 text-sm focus:outline-none focus:ring-0 focus:border-primary-500"
+        placeholder="Vorname"
+      />
+    </div>
+    <div class="mb-3">
+      <input
+        type="text"
+        [(ngModel)]="filters.lastName"
+        (ngModelChange)="first = 0; applyFilters()"
+        class="w-full h-10 sm:h-[46px] border border-gray-300 rounded-lg sm:rounded-[13.55px] px-3 py-2 text-sm focus:outline-none focus:ring-0 focus:border-primary-500"
+        placeholder="Nachname"
+      />
+    </div>
+    <div class="mb-3">
+      <input
+        type="text"
+        [(ngModel)]="filters.address"
+        (ngModelChange)="first = 0; applyFilters()"
+        class="w-full h-10 sm:h-[46px] border border-gray-300 rounded-lg sm:rounded-[13.55px] px-3 py-2 text-sm focus:outline-none focus:ring-0 focus:border-primary-500"
+        placeholder="Adresse"
+      />
+    </div>
+    <div class="mb-3">
+      <input
+        type="text"
+        [(ngModel)]="filters.country"
+        (ngModelChange)="first = 0; applyFilters()"
+        class="w-full h-10 sm:h-[46px] border border-gray-300 rounded-lg sm:rounded-[13.55px] px-3 py-2 text-sm focus:outline-none focus:ring-0 focus:border-primary-500"
+        placeholder="Land"
+      />
+    </div>
+    <div class="mb-5">
+      <input
+        type="text"
+        [(ngModel)]="filters.distance"
+        (ngModelChange)="first = 0; applyFilters()"
+        class="w-full h-10 sm:h-[46px] border border-gray-300 rounded-lg sm:rounded-[13.55px] px-3 py-2 text-sm focus:outline-none focus:ring-0 focus:border-primary-500"
+        placeholder="Entvernung"
+      />
+    </div>
+
+    <!-- Qualification section -->
+    <div class="mb-5">
+      <div class="flex justify-between items-center mb-3 text-sm sm:text-[13.55px]">
+        <h3 class="text-gray-800 font-medium">Qualifikation</h3>
+        <button class="text-primary-500 text-xs sm:text-sm" (click)="resetQualifications()">Reset</button>
+      </div>
+
+      <div class="flex flex-col gap-y-2 mb-5 text-xs sm:text-[14px] max-h-[300px] overflow-y-auto pr-2">
+        <button
+          *ngFor="let qual of filters.qualifications | keyvalue"
+          (click)="toggleQualification(qual.key)"
+          class="border-2 rounded-lg sm:rounded-[13.55px] py-2 text-center text-primary-500 h-10 sm:h-[46px] cursor-pointer flex-shrink-0"
+          [ngClass]="{ 'border-primary-500': qual.value, 'border-gray-100': !qual.value }"
+        >
+          {{ qual.key }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Status section -->
+    <div>
+      <div class="flex justify-between items-center mb-3 text-sm sm:text-[13.55px]">
+        <h3 class="text-gray-800 font-medium">Status</h3>
+        <button class="text-primary-500 text-xs sm:text-sm" (click)="resetStatus()">Reset</button>
+      </div>
+
+      <div class="flex flex-col gap-y-2 text-xs sm:text-[14px]">
+        <button
+          *ngFor="let stat of filters.status | keyvalue"
+          (click)="toggleStatus(stat.key)"
+          class="border-2 rounded-lg sm:rounded-[13.55px] py-2 text-center text-primary-500 h-10 sm:h-[46px] cursor-pointer"
+          [ngClass]="{ 'border-primary-500': stat.value, 'border-gray-100': !stat.value }"
+        >
+          {{ stat.key }}
+        </button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+

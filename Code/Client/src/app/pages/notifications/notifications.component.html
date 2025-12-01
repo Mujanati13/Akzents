@@ -1,0 +1,66 @@
+<section>
+  <h2 translate class="flex text-primary-700 mb-8">
+    <app-icon name="notifications" class="w-8 flex items-center mr-1 text-primary-700" />
+    <span class="text-[32px] font-bold font-dm mr-4">Neugkeiten</span>
+    <ng-container *ngIf="tag">
+      <span
+      class="ml-2 inline-flex place-self-center items-center justify-center w-8 h-8 rounded-full bg-red-600 text-white text-base font-bold shadow-md"
+      role="status"
+      aria-label="Neue Benachrichtigungen"
+    >        {{ tag }}
+      </span>
+    </ng-container>
+  </h2>
+
+  <!-- Loading state -->
+  <div *ngIf="loading" class="flex justify-center items-center h-64 mb-10">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error" class="bg-red-50 p-4 rounded-md mb-6">
+    <p class="text-red-800">Es ist ein Fehler beim Laden der Benachrichtigungen aufgetreten. Bitte versuchen Sie es später erneut.</p>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!loading && !error">
+    <p-table [value]="notifications" stripedRows [scrollable]="true" scrollHeight="78vh" dataKey="id" [tableStyle]="{ 'min-width': '60rem' }">
+      <ng-template #header let-columns>
+        <tr>
+          <th class="rounded-l-lg">
+            <div class="flex space-x-2 items-center py-2"><span>Neuigkeiten</span></div>
+          </th>
+          <th class="rounded-r-lg w-[100px] text-sm">ungelesen / gelesen</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-notification let-expanded="expanded" let-columns="columns">
+        <tr>
+          <td
+            class="cursor-pointer rounded-l-lg"
+            [ngClass]="!notification.seen ? 'font-bold' : ''"
+            [routerLink]="notification.link || []"
+            (click)="onNotificationClick(notification)"
+          >
+            <span 
+              class="mr-2 rounded-full w-3 h-3 inline-block"
+              [ngClass]="!notification.seen ? 'bg-red-600' : 'bg-gray-400'"
+            ></span>
+            {{ notification.message }}
+          </td>
+          <td class="rounded-r-lg text-center">
+            <p-toggleswitch [ngModel]="!notification.seen" (onChange)="onSeenToggle(notification)">
+              <ng-template #handle let-checked="checked">
+                <app-icon [name]="!notification.seen ? 'eye-slash' : 'eye'" />
+              </ng-template>
+            </p-toggleswitch>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <!-- Empty state -->
+    <div *ngIf="notifications.length === 0" class="text-center py-8">
+      <p class="text-gray-500">Keine Benachrichtigungen vorhanden.</p>
+    </div>
+  </div>
+</section>

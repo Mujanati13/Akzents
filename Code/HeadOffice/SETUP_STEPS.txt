@@ -1,0 +1,32 @@
+# Drag-and-Drop Implementation - 4 Simple Steps
+
+## Step 1: Update clients.module.ts
+
+Add this import:
+import { DragDropModule } from '@angular/cdk/drag-drop';
+
+Add to imports array:
+DragDropModule,
+
+## Step 2: Update report-edit.component.ts
+
+Add import:
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+
+Add methods before saveReportPhotos():
+- getVorherImages(photoIndex)
+- getNachherImages(photoIndex) 
+- getNachherOnlyImages(photoIndex)
+- onVorherDropped(event, photoIndex)
+- onNachherDropped(event, photoIndex)
+- onNachherOnlyDropped(event, photoIndex)
+
+## Step 3: Update HTML
+
+Replace photo grid sections with cdkDropList and cdkDrag directives.
+
+## Step 4: Add CSS
+
+Add drag-drop styles to report-edit.component.scss
+
+See included TypeScript and HTML code examples.

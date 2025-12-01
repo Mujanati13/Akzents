@@ -1,0 +1,34 @@
+.p-inputgroupaddon:first-child,
+.p-inputgroupaddon + .p-inputgroupaddon {
+  border-radius: 6px 0 0 6px;
+  min-width: auto;
+  padding-right: 0px;
+}
+.p-inputtext {
+  font-size: 11px;
+  padding-top: 23px;
+}
+
+.p-select-label {
+  font-size: 11px; // Increased from 11px
+  // line-height: 1.2; // Add line height to help with vertical alignment
+  display: flex;
+  padding-bottom: 11px;
+  align-items: center; // Center align the text vertically
+}
+
+.shadow-selected {
+  box-shadow: 0 0 0 4px var(--primary-500, #00709b); // Adjust color to match your primary-500
+}
+
+.p-steplist {
+  overflow: visible;
+}
+.p-step {
+  gap: 0px;
+  padding: 0px;
+}
+
+.p-select-overlay {
+  width: 100%;
+}

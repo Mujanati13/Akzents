@@ -1,0 +1,255 @@
+<section>
+  <h2 translate class="flex text-primary-700 mb-10"><app-icon name="see_all"
+      class="w-8 flex items-center mr-1 text-primary-700" /><span class="text-[32px] font-bold font-dm">Alle
+      Einsätze</span></h2>
+  <div class="mb-8 grid grid-cols-1 lg:grid-cols-[285px_285px_285px_285px_auto] gap-[15px] items-center">
+    <!-- Search Input for Projects -->
+    <div class="relative w-full lg:w-[285px]">
+      <input type="text" placeholder="Projektsuche" [(ngModel)]="projectSearchTerm" (input)="onProjectSearch($event)"
+        [class]="'h-[54px] px-4 border border-gray-300 rounded-md font-inter text-sm w-full focus:outline-none focus:ring-0 focus:border-primary-500' + (projectSearchTerm && projectSearchTerm.length > 0 ? ' pr-10' : '')" />
+      <app-icon *ngIf="!projectSearchTerm || projectSearchTerm.length === 0" name="search"
+        class="absolute right-2 top-1/2 transform -translate-y-1/2 w-[19px] h-[19px] text-gray-500" />
+      <button
+        *ngIf="projectSearchTerm && projectSearchTerm.length > 0"
+        type="button"
+        (click)="clearProjectSearch()"
+        class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors"
+        title="Suche löschen"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Search Input for Filiales -->
+    <div class="relative w-full lg:w-[285px]">
+      <input type="text" placeholder="Filialesuche" [(ngModel)]="filialeSearchTerm" (input)="onFilialeSearch($event)"
+        [class]="'h-[54px] px-4 border border-gray-300 rounded-md font-inter text-sm w-full focus:outline-none focus:ring-0 focus:border-primary-500' + (filialeSearchTerm && filialeSearchTerm.length > 0 ? ' pr-10' : '')" />
+      <app-icon *ngIf="!filialeSearchTerm || filialeSearchTerm.length === 0" name="search"
+        class="absolute right-2 top-1/2 transform -translate-y-1/2 w-[19px] h-[19px] text-gray-500" />
+      <button
+        *ngIf="filialeSearchTerm && filialeSearchTerm.length > 0"
+        type="button"
+        (click)="clearFilialeSearch()"
+        class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer transition-colors"
+        title="Suche löschen"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Date Picker with Custom Popover -->
+    <app-date-range-picker [(selectedRange)]="dateRange2" (rangeSelected)="onRangeSelected($event)"
+      position="right"></app-date-range-picker>
+
+    <!-- Clear Filters Button -->
+    <div class="flex gap-2">
+      <button *ngIf="projectSearchTerm || filialeSearchTerm || dateRange2.start || dateRange2.end"
+        (click)="clearFilters()"
+        class="px-4 py-2 cursor-pointer bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors text-sm">
+        Alle anzeigen
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading indicator -->
+  <div *ngIf="isLoading" class="flex justify-center items-center h-64">
+    <div class="text-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+      <p class="text-gray-600">Loading reports...</p>
+    </div>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="error && !isLoading" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+    {{ error }}
+    <button (click)="loadReports()"
+      class="ml-4 bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">Retry</button>
+  </div>
+
+  <!-- Main Table - Updated for report data -->
+  <p-table *ngIf="!isLoading" [value]="filteredReports" stripedRows [scrollable]="true" scrollHeight="70vh" dataKey="id"
+    [tableStyle]="{ 'min-width': '60rem' }" [columns]="getVisibleColumns()" [reorderableColumns]="true"
+    (onColReorder)="onColReorder($event)">
+    <ng-template #header let-columns>
+      <tr>
+        <th class="rounded-l-lg">
+          <div class="flex gap-x-2 items-center">
+            <div class="flex space-x-2 items-center">
+              <span>Status</span>
+              <app-icon name="table_sort" class="w-3 cursor-pointer" [class.text-primary-500]="sortField === 'status'"
+                (click)="onSort('status')" />
+            </div>
+            <div class="flex gap-x-2 items-center" (click)="openStatusFilter($event)">
+              <svg class="w-3 h-3 text-white"
+                [class.text-primary-700]="reportStatusFilter && reportStatusFilter.length > 0" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+            </div>
+          </div>
+        </th>
+        <th *ngFor="let col of columns" pReorderableColumn>
+          <div class="flex items-center relative"
+            [class.justify-between]="col.field === 'merchandiser.user.firstName' || col.field === 'branch.name'"
+            [class.space-x-2]="col.field !== 'merchandiser.user.firstName' && col.field !== 'branch.name'">
+            <div class="flex space-x-2 items-center">
+              <span>{{ col.header }}</span>
+              <app-icon name="table_sort" class="w-3 cursor-pointer" [class.text-primary-500]="sortField === col.field"
+                (click)="onSort(col.field); $event.stopPropagation()" />
+            </div>
+
+
+            <!-- Filialen Filter Icon -->
+            <div *ngIf="col.field === 'branch.name'" class="items-center cursor-pointer text-xs"
+              (click)="openFilialenFilter($event); $event.stopPropagation()">
+              <svg class="w-3 h-3 text-white "
+                [class.text-primary-700]="reportFilialenFilter && reportFilialenFilter.length > 0" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+            </div>
+
+
+            <!-- Generic Filter Icon for all other columns -->
+            <div *ngIf="col.field !== 'merchandiser.user.firstName' && col.field !== 'branch.name' && col.field !== 'plannedOn'"
+              class="items-center cursor-pointer text-xs"
+              (click)="openGenericFilter(col.field, $event)">
+              <svg class="w-3 h-3 text-white"
+                [class.text-primary-700]="getGenericFilterValue(col.field) && getGenericFilterValue(col.field).length > 0"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+            </div>
+          </div>
+        </th>
+        <th class="rounded-r-lg">
+          <div class="flex space-x-2 items-center justify-end cursor-pointer">
+            <span (click)="toggleSettingsPopover($event)"> Settings</span>
+            <span class="pi pi-cog text-sm!" (click)="toggleSettingsPopover($event)"></span>
+          </div>
+        </th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-report let-columns="columns">
+      <tr class="bg-white">
+        <td class="rounded-l-lg">
+          <span *ngIf="report?.status"
+            class="text-white w-[70px] h-[23px] text-xs rounded-sm flex items-center justify-center uppercase"
+            [style.background-color]="report?.status?.merchandiserColor">
+            {{ report?.status?.merchandiserName }}
+          </span>
+        </td>
+        <td *ngFor="let col of columns">
+          <ng-container [ngSwitch]="col.field">
+            <!-- Handle special rendering for nested fields -->
+            <ng-container *ngSwitchCase="'merchandiser.user.firstName'"> {{ report.merchandiser?.user?.firstName || '-'
+              }} {{ report.merchandiser?.user?.lastName || '' }} </ng-container>
+            <ng-container *ngSwitchCase="'branch.name'">
+              {{ report.branch?.name || '-' }}
+            </ng-container>
+            <ng-container *ngSwitchCase="'plannedOn'">
+              {{ report.plannedOn | euDate }}
+            </ng-container>
+            <ng-container *ngSwitchCase="'reportTo'">
+              {{ report.reportTo | euDate }}
+            </ng-container>
+            <ng-container *ngSwitchCase="'isSpecCompliant'">
+              {{ report.isSpecCompliant ? 'Ja' : 'Nein' }}
+            </ng-container>
+            <ng-container *ngSwitchCase="'feedback'">
+              {{ report.feedback == 'true' ? 'Ja' : 'Nein' }}
+            </ng-container>
+            <!-- Default rendering for other fields -->
+            <ng-container *ngSwitchDefault>
+              {{ report[col.field] || '-' }}
+            </ng-container>
+          </ng-container>
+        </td>
+        <td class="rounded-r-lg">
+          <div class="flex space-x-3 justify-end">
+            <a [routerLink]="['/clients', report.branch?.client?.id, 'projects', report.project?.id, 'edit-report', report.id]"
+              class="flex items-center cursor-pointer" title="Bearbeiten (Rechtsklick für neuen Tab)"
+              (click)="$event.stopPropagation()">
+              <app-icon name="pencil" class="w-5 h-5 text-primary-500 hover:text-primary-600"
+                title="Bearbeiten (Rechtsklick für neuen Tab)" />
+            </a>
+            <a [routerLink]="['/clients', report.branch?.client?.id, 'projects', report.project?.id, 'reports', report.id]"
+              class="flex items-center cursor-pointer" title="Anzeigen (Rechtsklick für neuen Tab)"
+              (click)="$event.stopPropagation()">
+              <app-icon name="resizeable_eye" class="w-5 h-5 text-primary-500 hover:text-primary-600"
+                title="Anzeigen (Rechtsklick für neuen Tab)" />
+            </a>
+            <!-- <app-icon name="check" class="w-5 h-5 cursor-pointer text-primary-500 flex items-center" title="Download Report" /> -->
+            <app-favorite-toggle class="h-5 w-5 flex-shrink-0" [isFavorite]="report.isFavorite"
+              (favoriteChange)="onFavoriteChanged($event, report)" />
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="10" class="text-center p-4">
+          <div *ngIf="!isLoading && !error">
+            <p class="text-gray-500 mb-2">Keine Berichte gefunden.</p>
+            <p class="text-sm text-gray-400">Bitte passen Sie Ihre Filter an oder erstellen Sie einen neuen Bericht.</p>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</section>
+
+<!-- Column settings popover -->
+<p-popover #columnsPopover (onHide)="onSettingsPopoverClose()">
+  <p-multiselect display="chip" [options]="cols" [(ngModel)]="selectedColumns"
+    (onChange)="onColumnsChange($event.value)" optionLabel="header" selectedItemsLabel="{0} columns selected"
+    [style]="{ 'min-width': '300px' }" placeholder="Choose Columns" />
+</p-popover>
+
+<!-- Status Filter Popover -->
+<p-popover #statusFilterPopover (onHide)="onStatusFilterPopoverClose()">
+  <p-multiselect display="chip" [(ngModel)]="reportStatusFilter" [options]="getUniqueReportStatuses()"
+    optionLabel="name" optionValue="name" placeholder="Alle Status" [showClear]="true"
+    [style]="{ 'min-width': '300px' }" selectedItemsLabel="{0} Status ausgewählt" (onChange)="applyFilters()">
+    <ng-template let-status pTemplate="item">
+      <div class="flex items-center gap-2">
+        <span class="w-3 h-3 rounded-full" [style.background-color]="status.merchandiserColor"></span>
+        <span>{{ status.merchandiserName }}</span>
+      </div>
+    </ng-template>
+  </p-multiselect>
+</p-popover>
+
+<!-- Merchandiser Filter Popover -->
+<p-popover #merchandiserFilterPopover (onHide)="onMerchandiserFilterPopoverClose()">
+  <p-multiselect display="chip" [(ngModel)]="reportMerchandiserFilter" [options]="getUniqueMerchandisers()"
+    placeholder="Alle Merchandiser" [showClear]="true" [style]="{ 'min-width': '300px' }"
+    selectedItemsLabel="{0} Merchandiser ausgewählt" (onChange)="applyFilters()">
+  </p-multiselect>
+</p-popover>
+
+<!-- Filialen Filter Popover -->
+<p-popover #filialenFilterPopover (onHide)="onFilialenFilterPopoverClose()">
+  <p-multiselect display="chip" [(ngModel)]="reportFilialenFilter" [options]="getUniqueFilialen()"
+    placeholder="Alle Filialen" [showClear]="true" [style]="{ 'min-width': '300px' }"
+    selectedItemsLabel="{0} Filialen ausgewählt" (onChange)="applyFilters()">
+  </p-multiselect>
+</p-popover>
+
+<!-- Generic Filter Popover -->
+<p-popover #genericFilterPopover (onHide)="onGenericFilterPopoverClose()">
+  <p-multiselect display="chip" [(ngModel)]="genericFilterValues[currentFilterField]"
+    [options]="getUniqueValuesForField(currentFilterField)"
+    [placeholder]="'Alle ' + getColumnHeader(currentFilterField)" [showClear]="true" [style]="{ 'min-width': '300px' }"
+    selectedItemsLabel="{0} ausgewählt" (onChange)="applyFilters()">
+  </p-multiselect>
+</p-popover>

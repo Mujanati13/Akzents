@@ -1,0 +1,174 @@
+/*
+* Entry point of global application style.
+* Component-specific style should not go here and be included directly as part of the components.
+*/
+@use "@ngneat/hot-toast/src/styles/styles.scss";
+
+// Sanitize.css
+@use "sanitize.css/sanitize.css";
+@use "primeicons/primeicons.css";
+@use "tailwindcss";
+@plugin 'tailwindcss-primeui';
+@layer tailwind, primeng;
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+@import "mapbox-gl/dist/mapbox-gl.css";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --font-inter: "Inter", sans-serif;
+    --font-dm: "DM Sans", sans-serif;
+    --font-poppins: "Poppins", sans-serif;
+    --p-rating-icon-active-color: #ffd409 !important;
+    --p-rating-icon-hover-color: #ffd409 !important;
+    --p-rating-icon-color: #d7d7d7 !important;
+    --p-stepper-separator-size: 3px !important;
+  }
+
+  body {
+    font-family: var(--font-inter);
+  }
+}
+
+@layer utilities {
+  .font-inter {
+    font-family: var(--font-inter);
+  }
+
+  .font-dm {
+    font-family: var(--font-dm);
+  }
+}
+.mapboxgl-popup-content {
+  border-radius: 0px;
+  box-shadow: 0px 0px 0px 0px;
+  background: transparent;
+  padding: 0px;
+  margin: 0px;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1); /* Add shadow */
+}
+.mapboxgl-popup-close-button,
+.mapboxgl-ctrl-bottom-right {
+  display: none;
+}
+.mapboxgl-ctrl-bottom-left {
+  display: none;
+}
+// th {
+//   @apply text-left font-medium bg-primary-700 text-white tracking-wider;
+// }
+.p-datatable-thead > tr > th {
+  @apply px-6 py-1.5 whitespace-nowrap text-[14px] border-none text-left font-medium bg-primary-700 text-white tracking-wider;
+}
+
+.p-datatable.p-datatable-striped .p-datatable-tbody > tr:nth-child(odd) {
+  @apply bg-white!;
+}
+.p-datatable.p-datatable-striped .p-datatable-tbody > tr:nth-child(even) {
+  @apply bg-[#F1F1F1]!;
+}
+
+.language-selector {
+  max-width: max-content;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+
+  .language-option {
+    cursor: pointer;
+    padding: 2px 4px;
+    transition: color 0.2s ease;
+
+    &:hover {
+      @apply text-primary-500;
+    }
+
+    &.selected {
+      @apply text-primary-600;
+      font-weight: 500;
+    }
+  }
+
+  .separator {
+    margin: 0 4px;
+    color: #6b7280; // Gray color for separator
+  }
+}
+
+.p-datatable-tbody > tr > td {
+  @apply px-6 py-2 whitespace-nowrap border-none h-[50px] h-[14px] text-[14px];
+}
+
+.isAlive {
+  color: #7d7c7c !important;
+  font-weight: 500 !important;
+  margin-left: 0.5rem;
+  margin-top: 0.1rem;
+
+  &:hover {
+    color: #99d7f4 !important;
+  }
+}
+
+.status {
+  color: #f63653 !important;
+  font-weight: 500 !important;
+  margin-left: 0.5rem;
+  margin-top: 0.1rem;
+}
+
+.p-accordionheader {
+  background-color: #f9f9f9;
+  border-top: 1px solid #dee2e6;
+  color: #187da4;
+}
+
+.p-accordioncontent-content {
+  @apply p-2 lg:p-[1.125rem];
+}
+
+.p-autocomplete {
+  .p-autocomplete-multiple-container {
+    padding: 0.5rem;
+    min-height: 46px;
+  }
+
+  .p-autocomplete-chip {
+    font-size: 12px !important;
+  }
+
+  .p-chip {
+    background-color: #f4f4f5;
+  }
+
+  .p-autocomplete-token {
+    background-color: #f3f4f6;
+    color: #374151;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    margin-right: 0.25rem;
+  }
+}
+
+.p-multiselect {
+  .p-chip-label {
+    font-size: 12px !important;
+  }
+
+  .p-chip {
+    background-color: #f4f4f5;
+  }
+
+  .p-multiselect-chip {
+    background-color: #f3f4f6;
+    color: #374151;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    margin-right: 0.25rem;
+  }
+}
+.p-dialog-content {
+  padding: 1rem !important;
+}

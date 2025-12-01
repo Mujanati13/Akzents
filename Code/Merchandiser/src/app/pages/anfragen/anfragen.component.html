@@ -1,0 +1,338 @@
+<section>
+  <h2 translate class="flex text-primary-700 mb-10"><app-icon name="question" class="w-8 flex items-center mr-1 text-primary-700" /><span class="text-[32px] font-bold font-dm">Anfragen</span></h2>
+
+  <!-- Loading state -->
+  <div *ngIf="loading" class="flex justify-center items-center h-64">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error" class="bg-red-50 p-4 rounded-md mb-8">
+    <p class="text-red-800">Es ist ein Fehler aufgetreten beim Laden der Anfragen. Bitte versuchen Sie es später erneut.</p>
+  </div>
+
+  <!-- Main content -->
+  <div *ngIf="!loading && !error">
+    <div class="mb-8 grid grid-cols-1 lg:grid-cols-[285px_285px_285px_285px_auto] gap-[15px] items-center">
+      <!-- Search Input for Projects -->
+      <div class="relative w-full lg:w-[285px]">
+        <input
+          type="text"
+          placeholder="Projektsuche"
+          [(ngModel)]="projectSearchTerm"
+          (input)="onProjectSearch($event)"
+          class="h-[54px] px-4 pr-10 border border-gray-300 rounded-md font-inter text-sm w-full focus:outline-none focus:ring-0 focus:border-primary-500"
+        />
+        <app-icon name="search" class="absolute right-2 top-1/2 transform -translate-y-1/2 w-[19px] h-[19px] text-gray-500" />
+      </div>
+
+      <!-- Search Input for Filialen -->
+      <div class="relative w-full lg:w-[285px]">
+        <input
+          type="text"
+          placeholder="Filialesuche"
+          [(ngModel)]="filialeSearchTerm"
+          (input)="onFilialeSearch($event)"
+          class="h-[54px] px-4 pr-10 border border-gray-300 rounded-md font-inter text-sm w-full focus:outline-none focus:ring-0 focus:border-primary-500"
+        />
+        <app-icon name="search" class="absolute right-2 top-1/2 transform -translate-y-1/2 w-[19px] h-[19px] text-gray-500" />
+      </div>
+
+      <!-- Date Picker with Custom Popover -->
+      <app-date-range-picker [(selectedRange)]="dateRange2" (rangeSelected)="onRangeSelected($event)" position="right"></app-date-range-picker>
+    </div>
+
+    <!-- Clear filters button -->
+    <div class="mb-4">
+      <button *ngIf="hasActiveFilters()" (click)="clearFilters()" class="px-4 py-2 cursor-pointer bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors text-sm">
+        Alle anzeigen
+      </button>
+    </div>
+
+    <!-- Main Projects Table -->
+    <p-table
+      [value]="projects"
+      stripedRows
+      [scrollable]="true"
+      scrollHeight="78vh"
+      dataKey="id"
+      [tableStyle]="{ 'min-width': '60rem' }"
+      [columns]="getProjectsVisibleColumns()"
+      [reorderableColumns]="true"
+      (onColReorder)="onProjectsColReorder($event)"
+    >
+      <ng-template #header let-columns>
+        <tr>
+        <th class="rounded-l-lg">
+          <div class="flex gap-x-2 items-center">
+            <div class="flex space-x-2 items-center">
+              <span>Projekt</span>
+              <app-icon name="table_sort" class="w-3 cursor-pointer" (click)="onProjectSort('name')" />
+            </div>
+            <div class="items-center cursor-pointer text-xs" (click)="openProjectColumnFilter('name', $event)">
+              <svg class="w-3 h-3"
+                [class.text-green-500]="getProjectColumnFilterValue('name') && getProjectColumnFilterValue('name').length > 0"
+                [class.text-white]="!getProjectColumnFilterValue('name') || getProjectColumnFilterValue('name').length === 0"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+            </div>
+          </div>
+        </th>
+        <th *ngFor="let col of columns" pReorderableColumn>
+          <div class="flex gap-x-2 items-center">
+            <div class="flex space-x-2 items-center">
+              <span>{{ col.header }}</span>
+              <app-icon name="table_sort" class="w-3 cursor-pointer" (click)="onProjectSort(col.field)" />
+            </div>
+            <div class="items-center cursor-pointer text-xs" (click)="openProjectColumnFilter(col.field, $event)">
+              <svg class="w-3 h-3"
+                [class.text-green-500]="getProjectColumnFilterValue(col.field) && getProjectColumnFilterValue(col.field).length > 0"
+                [class.text-white]="!getProjectColumnFilterValue(col.field) || getProjectColumnFilterValue(col.field).length === 0"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+            </div>
+          </div>
+        </th>
+          <th class="rounded-r-lg">
+            <div class="flex space-x-2 items-center justify-end cursor-pointer">
+              <span (click)="op.toggle($event)"> Settings</span> <span class="pi pi-cog text-sm!" (click)="op.toggle($event)"></span>
+            </div>
+          </th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-project let-columns="columns">
+        <tr>
+          <td class="rounded-l-lg font-bold text-primary-500">{{ project.name }}</td>
+          <td *ngFor="let col of columns">
+            <ng-container [ngSwitch]="col.field">
+              <!-- Special formatting for zeitraum -->
+              <ng-container *ngSwitchCase="'formattedZeitraum'">
+                <span
+                  ><strong>{{ project.calendarWeek }}</strong> {{ project.zeitraum }}</span
+                >
+              </ng-container>
+
+              <!-- Default formatting for other columns -->
+              <ng-container *ngSwitchDefault>
+                {{ project[col.field] }}
+              </ng-container>
+            </ng-container>
+          </td>
+          <td class="rounded-r-lg">
+            <div class="flex space-x-3 justify-end">
+              <app-icon name="paper_search" class="h-4 w-4 cursor-pointer text-blue-600" title="Download Excel" (click)="downloadProjectCsv(project)" />
+              <app-favorite-toggle class="h-5 w-5 flex-shrink-0" [isFavorite]="project.isFavorite" (favoriteChange)="onFavoriteChanged($event, project)" />
+            </div>
+          </td>
+        </tr>
+        <!-- Nested table row - always visible -->
+        <tr>
+          <td colspan="4" class="bg-gray-50 px-2">
+            <p-table [value]="project.orders" dataKey="id">
+              <!-- Note: NO stripedRows property on inner table -->
+              <ng-template #body let-order>
+                <tr class="bg-white">
+                  <td class="rounded-l-lg py-3 px-4">
+                    <span class="bg-[#00A8E9] text-white text-xs font-bold py-1 px-3 rounded uppercase"> ANFRAGE </span>
+                  </td>
+                  <td class="py-3 px-4">
+                    <div class="font-medium text-gray-900">{{ order.merchandiser }}</div>
+                  </td>
+                  <td class="py-3 px-4">
+                    <div class="text-gray-700">{{ order.filiale }}</div>
+                  </td>
+                  <td class="py-3 px-4">
+                    <div class="text-gray-600 text-sm">{{ order.adresse }}</div>
+                  </td>
+                  <td class="py-3 px-4">
+                    <div class="text-gray-700 font-medium">Beginn 8 Uhr</div>
+                  </td>
+                  <td class="rounded-r-lg py-3 px-4">
+                    <div class="flex gap-x-2 items-center justify-end">
+                      <button (click)="acceptOrder(order, project)" class="cursor-pointer bg-[#6FCC08] hover:bg-green-600 text-white text-xs font-medium py-2 px-4 rounded transition-colors duration-300">
+                        Auftrag annehmen
+                      </button>
+                      <button (click)="rejectOrder(order, project)" class="cursor-pointer bg-[#D10003] hover:bg-red-700 text-white text-xs font-medium py-2 px-4 rounded transition-colors duration-300">
+                        Auftrag ablehnen
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template #emptymessage>
+                <tr>
+                  <td colspan="6" class="bg-white py-4 text-center text-gray-500">Es sind noch keine Anfragen für dieses Projekt vorhanden.</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <p-popover #op>
+      <p-multiselect
+        display="chip"
+        [options]="cols"
+        [(ngModel)]="selectedColumns"
+        (onChange)="onProjectsColumnsChange($event.value)"
+        optionLabel="header"
+        selectedItemsLabel="{0} columns selected"
+        [style]="{ 'min-width': '200px' }"
+        placeholder="Choose Columns"
+      />
+    </p-popover>
+
+    <!-- Project Column Filter Popover -->
+    <p-popover #projectColumnFilterPopover>
+      <div class="flex flex-col">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-semibold text-sm">Filter</span>
+          <button type="button" (click)="projectColumnFilterPopover.hide()" class="text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <p-multiselect
+          display="chip"
+          [(ngModel)]="projectColumnFilters[currentProjectFilterField]"
+          [options]="getProjectFilterOptions(currentProjectFilterField)"
+          [placeholder]="getProjectFilterPlaceholder(currentProjectFilterField)"
+          [showClear]="true"
+          [style]="{ 'min-width': '200px' }"
+          selectedItemsLabel="{0} ausgewählt"
+          (onChange)="applyFilters()"
+        />
+      </div>
+    </p-popover>
+  </div>
+</section>
+
+<!-- Add this at the bottom of your component, after the existing popover -->
+<p-popover #orderColumnsPopover>
+  <p-multiselect
+    display="chip"
+    [options]="orderCols"
+    [(ngModel)]="selectedOrderColumns"
+    (onChange)="onOrdersColumnsChange($event.value)"
+    optionLabel="header"
+    selectedItemsLabel="{0} columns selected"
+    [style]="{ 'min-width': '200px' }"
+    placeholder="Choose Columns"
+  />
+</p-popover>
+
+<!-- Accept Success Modal -->
+<p-dialog
+  [(visible)]="successModalVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '90%', maxWidth: '290px' }"
+  [contentStyle]="{ padding: '1.5rem', borderRadius: '8px', textAlign: 'center' }"
+  [showHeader]="false"
+  [closeOnEscape]="true"
+  [dismissableMask]="true"
+>
+  <div class="flex flex-col items-center">
+    <!-- Success Icon -->
+    <div class="w-[71px] h-[71px] rounded-full border-2 border-[#007296] flex items-center justify-center mb-6 bg-[#EFF6FF]">
+      <app-icon name="modal-check"></app-icon>
+    </div>
+
+    <!-- Success Message -->
+    <h2 class="text-[14px] font-medium mb-4">Auftrag erfolgreich angenommen</h2>
+
+    <!-- Divider -->
+    <hr class="w-full border-t border-gray-200 mb-4" />
+
+    <div class="flex flex-col sm:flex-row items-center gap-y-2 sm:gap-x-4">
+      <!-- Close button -->
+      <button (click)="closeModal()" class="w-full sm:w-auto bg-[#F1F5F9] hover:bg-[#E8E8E8] text-[#007296] text-[14px] rounded-md transition-colors px-3 h-[37px] cursor-pointer">
+        <span>Schließen</span>
+      </button>
+
+      <!-- Navigate to report button -->
+      <button (click)="goToReport()" class="w-full sm:w-auto bg-[#007296] hover:bg-[#005d7a] text-white text-[14px] rounded-md transition-colors px-3 h-[37px] cursor-pointer">
+        <span>Zum Report</span>
+      </button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Confirm Reject Modal -->
+<p-dialog
+  [(visible)]="confirmRejectModalVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '90%', maxWidth: '350px' }"
+  [contentStyle]="{ padding: '1.5rem', borderRadius: '8px', textAlign: 'center' }"
+  [showHeader]="false"
+  [closeOnEscape]="true"
+  [dismissableMask]="true"
+>
+  <div class="flex flex-col items-center">
+    <!-- Warning Icon -->
+    <div class="w-[71px] h-[71px] rounded-full border-2 border-[#D10003] flex items-center justify-center mb-6 bg-[#FEF2F2]">
+      <span class="text-[#D10003] text-4xl">!</span>
+    </div>
+
+    <!-- Confirmation Message -->
+    <h2 class="text-[16px] font-medium mb-2">Auftrag ablehnen?</h2>
+    <p class="text-[14px] text-gray-600 mb-4">Möchten Sie diesen Auftrag wirklich ablehnen?</p>
+
+    <!-- Divider -->
+    <hr class="w-full border-t border-gray-200 mb-4" />
+
+    <div class="flex flex-col sm:flex-row items-center gap-y-2 sm:gap-x-4 w-full place-content-center">
+      <!-- Cancel button -->
+      <button (click)="cancelReject()" class="w-full sm:w-auto bg-[#F1F5F9] hover:bg-[#E8E8E8] text-[#007296] text-[14px] rounded-md transition-colors px-4 h-[37px] cursor-pointer">
+        <span>Abbrechen</span>
+      </button>
+
+      <!-- Confirm reject button -->
+      <button (click)="confirmReject()" class="w-full sm:w-auto bg-[#D10003] hover:bg-[#A10002] text-white text-[14px] rounded-md transition-colors px-4 h-[37px] cursor-pointer">
+        <span>Ablehnen</span>
+      </button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Reject Success Modal -->
+<p-dialog
+  [(visible)]="rejectSuccessModalVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '90%', maxWidth: '290px' }"
+  [contentStyle]="{ padding: '1.5rem', borderRadius: '8px', textAlign: 'center' }"
+  [showHeader]="false"
+  [closeOnEscape]="true"
+  [dismissableMask]="true"
+>
+  <div class="flex flex-col items-center">
+    <!-- Success Icon -->
+    <div class="w-[71px] h-[71px] rounded-full border-2 border-[#007296] flex items-center justify-center mb-6 bg-[#EFF6FF]">
+      <app-icon name="modal-check"></app-icon>
+    </div>
+
+    <!-- Success Message -->
+    <h2 class="text-[14px] font-medium mb-4">Auftrag erfolgreich abgelehnt</h2>
+
+    <!-- Divider -->
+    <hr class="w-full border-t border-gray-200 mb-4" />
+
+    <div class="flex items-center justify-center">
+      <!-- Close button -->
+      <button (click)="closeRejectSuccessModal()" class="w-full sm:w-auto bg-[#007296] hover:bg-[#005d7a] text-white text-[14px] rounded-md transition-colors px-4 h-[37px] cursor-pointer">
+        <span>Schließen</span>
+      </button>
+    </div>
+  </div>
+</p-dialog>

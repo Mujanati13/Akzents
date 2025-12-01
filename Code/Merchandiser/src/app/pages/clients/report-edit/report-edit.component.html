@@ -1,0 +1,470 @@
+<section>
+  <!-- Loading state -->
+  <div *ngIf="loading" class="flex justify-center items-center h-64">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error" class="bg-red-50 p-4 rounded-md">
+    <p class="text-red-800">Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.</p>
+  </div>
+
+  <!-- Report details -->
+  <div *ngIf="!loading && !error">
+    <h2 translate class="flex justify-between items-center text-primary-700 mb-10 gap-6">
+      <div class="flex gap-2">
+        <app-icon name="projects" class="w-8 h-8 flex-shrink-0 text-primary-700" />
+        <span class="text-[32px] font-bold font-dm leading-tight">Projekte</span>
+      </div>
+      <button
+        type="button"
+        class="cursor-pointer pr-6 flex items-center justify-center text-primary-600 hover:text-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        (click)="goBack()"
+        [disabled]="saving"
+        title="Zurück"
+      >
+        <app-icon name="arrow-left" class="w-6 h-6"></app-icon>
+      </button>
+    </h2>
+    <!-- Project Header -->
+    <div class="bg-[#187DA4] rounded-[25px] text-white py-[15px] px-[20px] sm:px-[37px] mb-6">
+      <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center font-dm gap-y-4 lg:gap-y-0">
+        <div class="flex-1">
+          <div>
+            <h2 class="text-[24px] sm:text-[28px] lg:text-[34px] font-bold leading-none">{{ report.project?.name || '' }}</h2>
+            <p class="text-[13px] sm:text-[15px]">{{ report.project?.startDate | euDate }} - {{ report.project?.endDate | euDate }}</p>
+            <div
+              class="mt-2 text-white text-[12px] sm:text-[14px] font-extrabold py-0.25 px-3 rounded-[4px] inline-block uppercase min-w-[70px] text-center"
+              [style.background-color]="report.status?.color"
+            >
+              {{ report.status?.name }}
+            </div>
+          </div>
+          <div class="flex flex-col sm:flex-row sm:gap-x-[20px] lg:gap-x-[75px] mt-4 gap-y-3 sm:gap-y-0">
+            <div class="text-[13px] sm:text-[15px]">
+              <p class="font-extrabold">{{ report.branch?.name || '' }}</p>
+              <p>
+                {{ report?.street || '' }},<br />
+                {{ report?.zipCode || '' }} <span *ngIf="report.branch?.city"> {{ report.branch.city.name }}</span>
+              </p>
+            </div>
+            <div class="flex gap-x-[10px]">
+              <div class="text-[13px] sm:text-[15px]">
+                <p>Merchandiser:</p>
+                <p>Datum:</p>
+              </div>
+              <div class="text-[13px] sm:text-[15px]">
+                <p>{{ report.merchandiser?.user?.firstName || '' }} {{ report.merchandiser?.user?.lastName || '' }}</p>
+                <p>{{ report.plannedOn | euDate }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-row lg:flex-col lg:h-[130px] justify-between lg:justify-between items-center lg:items-center gap-x-4 lg:gap-x-0">
+          <div class="flex flex-col items-center">
+            <div class="toggle-container rounded-[10px] overflow-hidden flex">
+              <button 
+                class="toggle-option py-1 px-2 sm:px-3 text-[12px] sm:text-[14px] font-bold uppercase" 
+                [class.active]="isStatusOpen()" 
+                [disabled]="isReportClosed()"
+                (click)="showStatusConfirmation('UngeprüfT')">
+                UngeprüfT
+              </button>
+              <button 
+                class="toggle-option py-1 px-2 sm:px-3 text-[12px] sm:text-[14px] font-bold uppercase" 
+                [class.active]="!isStatusOpen()" 
+                [disabled]="isReportClosed()"
+                (click)="showStatusConfirmation('Freigegeben')">
+                Freigegeben
+              </button>
+            </div>
+            <span class="mt-1 uppercase font-dm text-[10px] sm:text-[11px]">STATUS</span>
+          </div>
+          <div class="flex gap-x-[12px] sm:gap-x-[16px] lg:justify-between lg:w-full uppercase font-dm text-[9px] sm:text-[10px]">
+            <div class="flex flex-col items-center">
+              <a 
+                [routerLink]="['/clients', clientId, 'projects', projectId, 'reports', reportId]"
+                class="bg-white w-[32px] h-[32px] sm:w-[36px] sm:h-[36px] rounded-full p-2 mb-1 flex items-center justify-center cursor-pointer hover:bg-gray-50 inline-flex"
+                title="Anzeigen (Rechtsklick für neuen Tab)"
+              >
+                <app-icon name="resizeable_eye" class="w-[16px] h-[16px] content-center sm:w-[19px] sm:h-[19px] text-primary-800" title="Anzeigen (Rechtsklick für neuen Tab)" />
+              </a>
+              <span class="mt-1">Anzeigen</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <div class="bg-white w-[32px] h-[32px] sm:w-[36px] sm:h-[36px] rounded-full p-2 mb-1 flex items-center justify-center cursor-pointer">
+                <app-favorite-toggle
+                  class="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0"
+                  activeColor="primary-500"
+                  inactiveColor="primary-800"
+                  [isFavorite]="report.isFavorite"
+                  (favoriteChange)="onFavoriteChanged($event, report)"
+                />
+              </div>
+              <span class="mt-1">Favorit</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <div class="bg-white w-[32px] h-[32px] sm:w-[36px] sm:h-[36px] rounded-full p-2 mb-1 flex items-center justify-center cursor-pointer">
+                <app-icon name="download" title="Exportieren" />
+              </div>
+              <span class="mt-1">Exportieren</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accordion sections -->
+    <p-accordion multiple="true" [(value)]="activeAccordionValue">
+      <!-- Termin section -->
+      <p-accordion-panel value="0">
+        <p-accordion-header>Termin</p-accordion-header>
+        <p-accordion-content [ngStyle]="{ overflow: 'visible' }">
+          <div class="flex flex-col gap-y-4">
+            <div class="flex flex-col gap-y-2">
+              <label class="text-[14px] font-bold text-primary-500">Termindatum</label>
+              <div class="max-w-xs">
+                <app-date-picker [selectedDate]="report.visitDate || null" (dateSelected)="onAppointmentDateSelected($event)"> </app-date-picker>
+              </div>
+            </div>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+
+      <!-- Details section -->
+      <p-accordion-panel value="1">
+        <p-accordion-header>Details</p-accordion-header>
+        <p-accordion-content [ngStyle]="{ overflow: 'visible' }">
+          <div class="flex flex-col gap-y-4">
+            <!-- Dynamic Questions from Project -->
+            <div *ngIf="report?.project?.questions" class="space-y-4">
+              <div *ngFor="let question of report.project.questions">
+                <label class="block text-[14px] font-bold mb-2">
+                  {{ question.questionText }}
+                  <span *ngIf="question.isRequired" class="text-red-500">*</span>
+                </label>
+
+                <!-- Text Input -->
+                <input
+                  *ngIf="question.answerType.name === 'text'"
+                  type="text"
+                  pInputText
+                  [(ngModel)]="questionAnswers[question.id]"
+                  (ngModelChange)="onQuestionAnswerChanged(question.id)"
+                  [placeholder]="'Antwort für: ' + question.questionText"
+                  class="w-full"
+                />
+
+                <!-- Boolean (Yes/No) -->
+                <div *ngIf="question.answerType.name === 'boolean'" class="flex items-center gap-x-4" role="radiogroup">
+                  <div
+                    class="flex items-center gap-x-1 cursor-pointer"
+                    (click)="questionAnswers[question.id] = true; onQuestionAnswerChanged(question.id)"
+                    role="radio"
+                    [attr.aria-checked]="questionAnswers[question.id] === true"
+                    tabindex="0"
+                  >
+                    <span class="flex items-center justify-center w-5 h-5">
+                      <app-icon *ngIf="questionAnswers[question.id] === true" name="radio_checked" />
+                      <app-icon *ngIf="questionAnswers[question.id] !== true" name="radio_unchecked" />
+                    </span>
+                    <label class="text-sm cursor-pointer">Ja</label>
+                  </div>
+                  <div
+                    class="flex items-center gap-x-1 cursor-pointer"
+                    (click)="questionAnswers[question.id] = false; onQuestionAnswerChanged(question.id)"
+                    role="radio"
+                    [attr.aria-checked]="questionAnswers[question.id] === false"
+                    tabindex="0"
+                  >
+                    <span class="flex items-center justify-center w-5 h-5">
+                      <app-icon *ngIf="questionAnswers[question.id] === false" name="radio_checked" />
+                      <app-icon *ngIf="questionAnswers[question.id] !== false" name="radio_unchecked" />
+                    </span>
+                    <label class="text-sm cursor-pointer">Nein</label>
+                  </div>
+                </div>
+
+                <!-- Single Select Radio Buttons -->
+                <div *ngIf="question.answerType.name === 'select'" class="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    *ngFor="let option of questionOptions[question.id]"
+                    class="px-3 py-2 rounded-md border text-sm transition-colors flex items-center gap-2 cursor-pointer"
+                    [ngClass]="{
+                      'border-primary-500 bg-primary-50 text-primary-700 font-semibold': isSingleAnswerSelected(question.id, option),
+                      'border-gray-300 text-gray-700 hover:border-primary-300 hover:text-primary-600': !isSingleAnswerSelected(question.id, option),
+                    }"
+                    (click)="selectSingleAnswer(question.id, option)"
+                  >
+                    <app-icon *ngIf="isSingleAnswerSelected(question.id, option)" name="radio_checked" class="w-4 h-4 text-primary-500"></app-icon>
+                    <app-icon *ngIf="!isSingleAnswerSelected(question.id, option)" name="radio_unchecked" class="w-4 h-4 text-gray-400"></app-icon>
+                    <span>{{ option }}</span>
+                  </button>
+                </div>
+
+                <!-- Multi Select Autocomplete -->
+                <div *ngIf="question.answerType.name === 'multiselect'" class="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    *ngFor="let option of questionOptions[question.id]"
+                    class="px-3 py-2 rounded-md border text-sm transition-colors flex items-center gap-2 cursor-pointer"
+                    [ngClass]="{
+                      'border-primary-500 bg-primary-50 text-primary-700 font-semibold': isMultiAnswerSelected(question.id, option),
+                      'border-gray-300 text-gray-700 hover:border-primary-300 hover:text-primary-600': !isMultiAnswerSelected(question.id, option)
+                    }"
+                    (click)="toggleMultiAnswer(question.id, option)"
+                  >
+                    <app-icon *ngIf="isMultiAnswerSelected(question.id, option)" name="radio_checked" class="w-4 h-4 text-primary-500"></app-icon>
+                    <app-icon *ngIf="!isMultiAnswerSelected(question.id, option)" name="radio_unchecked" class="w-4 h-4 text-gray-400"></app-icon>
+                    <span>{{ option }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+
+      <!-- Photos section -->
+      <p-accordion-panel value="2">
+        <p-accordion-header>Fotos</p-accordion-header>
+        <p-accordion-content>
+          <div class="flex flex-col gap-y-6 mb-4">
+            <!-- Dynamic Photos from Project Advanced Photos -->
+            <div *ngFor="let photo of report?.project?.advancedPhotos; let i = index">
+              <h3 class="text-[16px] mb-2">{{ i + 1 }}. FOTOS {{ i + 1 }} {{ photo.isBeforeAfter ? '(Vorher & Nachher)' : '(Nachher)' }}</h3>
+              <div class="grid grid-cols-2 max-w-[928px] gap-x-6" *ngIf="photo.isBeforeAfter">
+                <div>
+                  <h4 class="font-bold text-[16px] mb-2">Vorher</h4>
+                  <app-multi-image-upload
+                    [count]="photo.labels?.length || 1"
+                    [label]=""
+                    [imageLabels]="photo.labels || ['Bezeichnung 1']"
+                    containerWidth="w-full"
+                    [prePopulatedImages]="i === 0 ? prepopulatedVorherImages1 : i === 2 ? prepopulatedVorherImages3 : []"
+                    (imagesChanged)="i === 0 ? onVorherImages1Changed($event) : i === 2 ? onVorherImages3Changed($event) : null"
+                    (fileDeleted)="i === 0 ? onVorherImages1FileDeleted($event) : i === 2 ? onVorherImages3FileDeleted($event) : null"
+                    [dropListId]="'vorher-list-' + i"
+                    [connectedDropLists]="['nachher-list-' + i]"
+                    listType="before"
+                    (crossListDropped)="onBeforeAfterCrossDrop(i, photo, $event)"
+                  >
+                  </app-multi-image-upload>
+                </div>
+                <div>
+                  <h4 class="font-bold text-[16px] mb-2">Nachher</h4>
+                  <app-multi-image-upload
+                    [count]="photo.labels?.length || 1"
+                    [label]=""
+                    [imageLabels]="photo.labels || ['Bezeichnung 1']"
+                    containerWidth="w-full"
+                    [prePopulatedImages]="i === 0 ? prepopulatedNachherImages1 : i === 2 ? prepopulatedNachherImages3 : []"
+                    (imagesChanged)="i === 0 ? onNachherImages1Changed($event) : i === 2 ? onNachherImages3Changed($event) : null"
+                    (fileDeleted)="i === 0 ? onNachherImages1FileDeleted($event) : i === 2 ? onNachherImages3FileDeleted($event) : null"
+                    [dropListId]="'nachher-list-' + i"
+                    [connectedDropLists]="['vorher-list-' + i]"
+                    listType="after"
+                    (crossListDropped)="onBeforeAfterCrossDrop(i, photo, $event)"
+                  >
+                  </app-multi-image-upload>
+                </div>
+              </div>
+              <div *ngIf="!photo.isBeforeAfter">
+                <h4 class="font-bold text-[16px] mb-2">Nachher</h4>
+                <app-multi-image-upload
+                  [count]="photo.labels?.length || 1"
+                  [label]=""
+                  [imageLabels]="photo.labels || ['Bezeichnung 1']"
+                  containerWidth="w-full"
+                  [prePopulatedImages]="i === 0 ? prepopulatedNachherImages1 : i === 1 ? prepopulatedNachherImages2 : i === 2 ? prepopulatedNachherImages3 : []"
+                  (imagesChanged)="onNachherOnlyImagesChanged($event, i)"
+                  (fileDeleted)="onNachherOnlyFileDeleted($event, i)"
+                >
+                </app-multi-image-upload>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save buttons -->
+          <div class="flex justify-end gap-4 mt-6">
+            <!-- Save only button -->
+            <button
+              type="button"
+              (click)="saveReportPhotos()"
+              [disabled]="saving"
+              class="px-4 py-2 bg-gray-500 flex items-center justify-center gap-x-[8px] hover:bg-gray-600 text-white font-dm cursor-pointer text-[14px] rounded-md transition-colors duration-200 disabled:bg-gray-300 h-[35px] min-w-[160px]"
+            >
+              <div *ngIf="saving" class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+              <app-icon *ngIf="!saving" name="save" class="text-white w-[11px] h-[11px]" />
+              <span>{{ saving ? 'Speichern...' : 'Speichern' }}</span>
+            </button>
+            <!-- Save and approve button -->
+            <button
+              type="button"
+              (click)="showConfirmApproveDialog = true"
+              [disabled]="saving || isReportClosed() || !canUserApprove()"
+              class="px-4 py-2 bg-[#66BC06] flex items-center justify-center gap-x-[8px] hover:bg-green-600 text-white font-dm cursor-pointer text-[14px] rounded-md transition-colors duration-200 disabled:bg-gray-300 h-[35px] min-w-[220px]"
+            >
+              <div *ngIf="saving" class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+              <app-icon *ngIf="!saving" name="save" class="text-white w-[11px] h-[11px]" />
+              <span>{{ saving ? 'Speichern...' : 'Speichern und freigeben' }}</span>
+            </button>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+
+      <!-- Dialog section - REPLACED WITH REPORT-DETAIL CONVERSATION LOGIC -->
+      <p-accordion-panel value="3">
+        <p-accordion-header>Dialog</p-accordion-header>
+        <p-accordion-content>
+          <div class="flex flex-col gap-y-4">
+            <div class="mt-4">
+              <div class="lg:border-r border-gray-200 lg:pr-4 flex flex-col h-[400px]">
+                <div class="flex-1 overflow-y-auto" #clientScrollContainer>
+                  <div class="flex flex-col gap-y-4 p-2" *ngIf="report.merchandiserMessages && report.merchandiserMessages.length">
+                    <ng-container *ngFor="let message of report.merchandiserMessages; let i = index">
+                      <div *ngIf="i === 0 || message.date !== report.merchandiserMessages[i - 1]?.date" class="flex items-center py-2">
+                        <div class="border-t border-gray-200 w-full"></div>
+                        <span class="text-xs text-gray-500 px-8">{{ message.date }}</span>
+                        <div class="border-t border-gray-200 w-full"></div>
+                      </div>
+                      <div class="flex" [class.justify-end]="message.sender !== 'client'">
+                        <div class="flex items-end max-w-[80%]" [class.flex-row-reverse]="message.sender === 'client'">
+                          <div *ngIf="message.sender === 'client'" class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                            <img [src]="message.avatar" [alt]="message.senderName" class="w-full h-full object-cover" />
+                          </div>
+                          <div class="mx-2" [class.order-first]="message.sender === 'client'">
+                            <span class="text-[13px] text-gray-500">{{ message.senderName }} {{ message.time }}</span>
+                            <div
+                              [ngClass]="{
+                                'bg-[#464B58]': message.sender !== 'client',
+                                'text-black': message.sender === 'client',
+                                'text-white': message.sender !== 'client',
+                                'bg-[#F2F2F2]': message.sender === 'client',
+                              }"
+                              class="rounded-lg p-4 mb-1 text-[14px]"
+                            >
+                              <p>{{ message.text }}</p>
+                            </div>
+                          </div>
+                          <div *ngIf="message.sender !== 'client'" class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                            <img [src]="message.avatar" [alt]="message.senderName" class="w-full h-full object-cover" />
+                          </div>
+                        </div>
+                      </div>
+                    </ng-container>
+                  </div>
+                </div>
+                <div class="p-3 border-t border-gray-200 mt-auto">
+                  <div class="flex gap-x-2">
+                    <textarea
+                      class="w-full border border-gray-300 rounded-[6px] p-2"
+                      rows="1"
+                      placeholder="Kommentare"
+                      [(ngModel)]="clientMessageContent"
+                      [disabled]="sendingClientMessage"
+                      (keydown.enter)="$event.preventDefault(); sendClientMessage()"
+                    ></textarea>
+                    <button
+                      class="bg-primary-500 flex items-center justify-center text-white w-[49px] h-[47px] ml-2 rounded-[6px]"
+                      (click)="sendClientMessage()"
+                      [disabled]="sendingClientMessage || !clientMessageContent.trim()"
+                    >
+                      <div *ngIf="sendingClientMessage" class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                      <app-icon *ngIf="!sendingClientMessage" name="send" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+    </p-accordion>
+  </div>
+</section>
+
+<!-- Confirmation Dialog for Save and Approve -->
+<p-dialog
+  [(visible)]="showConfirmApproveDialog"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '400px' }"
+  [contentStyle]="{ padding: '2rem', borderRadius: '8px' }"
+  [showHeader]="false"
+  [closeOnEscape]="true"
+  [dismissableMask]="true"
+>
+  <div class="flex flex-col items-center">
+    <div class="w-[71px] h-[71px] rounded-full flex items-center justify-center mb-6 border-2 border-orange-500 bg-orange-50">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-[35px] h-[35px] text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+        />
+      </svg>
+    </div>
+
+    <h2 class="text-[18px] font-bold mb-2 text-gray-800">Report freigeben?</h2>
+    <p class="text-[14px] text-gray-600 mb-6 text-center">Möchten Sie den Report wirklich speichern und freigeben? Diese Aktion kann nicht rückgängig gemacht werden.</p>
+
+    <hr class="w-full border-t border-gray-200 mb-4" />
+
+    <div class="flex gap-3 w-full">
+      <button (click)="cancelConfirmApprove()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 text-[14px] rounded-md transition-colors h-[37px] flex items-center justify-center">
+        Abbrechen
+      </button>
+      <button (click)="confirmSaveAndApprove()" class="flex-1 bg-[#66BC06] hover:bg-green-600 text-white text-[14px] rounded-md transition-colors h-[37px] flex items-center justify-center">
+        Bestätigen
+      </button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Confirmation Dialog for Status Change -->
+<p-dialog
+  [(visible)]="showConfirmStatusDialog"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '400px' }"
+  [contentStyle]="{ padding: '2rem', borderRadius: '8px' }"
+  [showHeader]="false"
+  [closeOnEscape]="true"
+  [dismissableMask]="true"
+>
+  <div class="flex flex-col items-center">
+    <div class="w-[71px] h-[71px] rounded-full flex items-center justify-center mb-6 border-2 border-orange-500 bg-orange-50">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-[35px] h-[35px] text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+        />
+      </svg>
+    </div>
+
+    <h2 class="text-[18px] font-bold mb-2 text-gray-800">
+      Status ändern?
+    </h2>
+    <p class="text-[14px] text-gray-600 mb-6 text-center">
+      Möchten Sie den Status wirklich auf "{{ pendingStatusChange === 'Freigegeben' ? 'Freigegeben' : 'UngeprüfT' }}" ändern?
+    </p>
+
+    <hr class="w-full border-t border-gray-200 mb-4" />
+
+    <div class="flex gap-3 w-full">
+      <button (click)="cancelStatusChange()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 text-[14px] rounded-md transition-colors h-[37px] flex items-center justify-center">
+        Abbrechen
+      </button>
+      <button (click)="confirmStatusChange()" class="flex-1 bg-[#66BC06] hover:bg-green-600 text-white text-[14px] rounded-md transition-colors h-[37px] flex items-center justify-center">
+        Bestätigen
+      </button>
+    </div>
+  </div>
+</p-dialog>

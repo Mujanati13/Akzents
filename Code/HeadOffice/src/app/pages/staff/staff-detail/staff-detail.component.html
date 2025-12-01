@@ -1,0 +1,379 @@
+<section>
+  <!-- Back Button -->
+  <h2 translate class="flex justify-between items-center text-primary-700 mb-10 gap-6">
+    <div class="flex gap-2">
+      <app-icon name="incognito" class="w-8 h-8 flex-shrink-0 text-primary-700" />
+      <span class="text-[32px] font-bold font-dm leading-tight">Personal</span>
+    </div>
+    <button
+      type="button"
+      class="cursor-pointer pr-6 flex items-center justify-center text-primary-600 hover:text-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      (click)="navigateBackToStaffList()"
+      title="Zurück zur Übersicht"
+    >
+      <app-icon name="arrow-left" class="w-6 h-6"></app-icon>
+    </button>
+  </h2>
+
+  <!-- Loading state -->
+  <div *ngIf="loading" class="flex justify-center items-center h-64">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error" class="bg-red-50 p-4 rounded-md">
+    <p class="text-red-800">Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.</p>
+  </div>
+
+  <!-- Staff details -->
+  <div *ngIf="!loading && !error && staffMember">
+    <!-- Header with basic info - Updated to match card design -->
+    <div class="bg-white rounded-[25px] border border-[#DEE2E6] flex items-center gap-x-[10px] p-[15px] mb-6 h-[182px]">
+      <!-- Staff Image -->
+      <div class="w-[145px] h-[155px] rounded-[10px] overflow-hidden flex-shrink-0 bg-gray-50 cursor-pointer hover:opacity-90 transition-opacity">
+        <p-image [src]="staffMember.image" alt="{{ staffMember.firstName }} {{ staffMember.lastName }}" imageClass="w-full h-full object-cover" [preview]="true" />
+      </div>
+
+      <!-- Staff Info -->
+      <div class="flex flex-col gap-y-[30px] flex-1">
+        <div class="flex justify-between">
+          <div class="flex flex-col gap-y-[4px]">
+            <div class="flex items-center">
+              <h3 class="text-primary-500 font-semibold text-[20px] truncate w-[230px]">{{ staffMember.firstName }} {{ staffMember.lastName }}</h3>
+              <span class="w-[70px] h-[21px] text-[10px] text-center uppercase font-extrabold font-dm text-[14px] text-white bg-primary-500 rounded-[4px]"> {{ staffMember.status }} </span>
+            </div>
+            <span class="text-gray-500 text-[12px] whitespace-nowrap">Geb. {{ staffMember.dateOfBirth }} </span>
+          </div>
+          <div class="flex flex-col items-end">
+            <div class="flex gap-x-2">
+              <a [href]="'mailto:' + staffMember.email">
+                <app-icon name="envelope" class="w-[19px] h-[19px] cursor-pointer text-primary-500 flex items-center" title="Mail schicken" />
+              </a>
+              <a [routerLink]="['/staff', staffId, 'edit']" [queryParams]="queryParams" class="inline-flex items-center" title="Bearbeiten (Rechtsklick für neuen Tab)">
+                <app-icon name="pencil" class="w-[19px] h-[19px] cursor-pointer text-primary-500 hover:text-primary-600" title="Bearbeiten (Rechtsklick für neuen Tab)" />
+              </a>
+              <app-favorite-toggle class="h-[19px] w-[19px] flex-shrink-0" [isFavorite]="staffMember.isFavorite" (favoriteChange)="onFavoriteChanged($event, staffMember)" />
+            </div>
+            <!-- Replace stars with p-rating component -->
+            <div *ngIf="feedbackStats && feedbackStats.totalReviews > 0" class="mt-2">
+              <p-rating [ngModel]="feedbackStats.averageRating" [readonly]="true" [stars]="5" [style]="{ '--p-rating-icon-size': '1.3rem', '--p-rating-gap': '0.3rem' }"></p-rating>
+            </div>
+            <div *ngIf="!feedbackStats || feedbackStats.totalReviews === 0" class="mt-2 text-xs text-gray-500">Keine Bewertungen</div>
+          </div>
+        </div>
+        <div class="flex gap-x-[75px]">
+          <div class="text-primary-600 leading-tight text-[14px]">
+            <p class="truncate">{{ staffMember.email }}</p>
+            <p class="truncate">{{ staffMember.phone }}</p>
+            <p class="truncate">HP: {{ staffMember.website }}</p>
+            <p class="truncate">{{ staffMember.country }}</p>
+          </div>
+          <div class="flex gap-x-[60px]">
+            <div class="text-primary-600 leading-tight text-[14px]">
+              <p class="truncate font-semibold">Hauptadresse</p>
+              <p class="truncate">{{ staffMember.address }}</p>
+              <p class="truncate">{{ staffMember.postalCode }} {{ staffMember.city }}</p>
+              <p class="truncate">{{ staffMember.country }}</p>
+            </div>
+            <div class="text-primary-600 leading-tight text-[14px]">
+              <p class="truncate font-semibold">Abweichende lieferadresse</p>
+              <p class="truncate">{{ staffMember.address }}</p>
+              <p class="truncate">{{ staffMember.postalCode }} {{ staffMember.city }}</p>
+              <p class="truncate">{{ staffMember.country }}</p>
+            </div>
+            <div class="text-primary-600 leading-tight text-[14px]">
+              <p class="truncate font-semibold">Zweitwohnsitz</p>
+              <p class="truncate">-</p>
+              <p class="truncate">-</p>
+              <p class="truncate">-</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accordion sections -->
+    <p-accordion multiple="true" [(value)]="activeAccordionValue">
+      <!-- Vertragsliches section -->
+      <p-accordion-panel value="0">
+        <p-accordion-header>Vertragsliches</p-accordion-header>
+        <p-accordion-content>
+          <div class="flex gap-x-[200px] text-[14px]">
+            <div>
+              <div *ngFor="let contract of staffMember.contractuals" class="flex items-center gap-2 mb-2">
+                <span class="w-[10px] h-[10px] rounded-full bg-primary-500"></span>
+                <span>{{ contract.name }}</span>
+              </div>
+            </div>
+            <div class="flex flex-col gap-y-2">
+              <p>UST-ID: {{ staffMember.taxId || 'DE123456789' }}</p>
+              <p>STEUER-NR: {{ staffMember.taxNumber || '123/207/50234' }}</p>
+            </div>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+
+      <!-- Feedback section -->
+      <p-accordion-panel value="1">
+        <p-accordion-header>Feedback</p-accordion-header>
+        <p-accordion-content>
+          <div class="flex justify-end items-center">
+            <!-- Conditionally show the button based on whether user has already reviewed -->
+            <div class="flex flex-col items-end gap-2">
+              <button
+                *ngIf="!userHasReviewed"
+                (click)="showFeedbackDialog()"
+                class="bg-primary-500 text-white px-4 py-2 rounded-[6px] text-[14px] font-dm w-[202px] h-[34px] cursor-pointer hover:bg-primary-600 transition-colors"
+              >
+                Neue Bewertung
+              </button>
+
+              <div *ngIf="userHasReviewed" class="bg-gray-300 text-gray-600 px-4 py-2 rounded-[6px] text-[14px] font-dm w-[202px] h-[34px] flex items-center justify-center cursor-not-allowed">
+                Bereits bewertet
+              </div>
+            </div>
+          </div>
+
+          <!-- Loading state for feedbacks -->
+          <div *ngIf="loadingFeedbacks" class="flex justify-center py-8">
+            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500"></div>
+          </div>
+
+          <!-- Feedback items from API -->
+          <div *ngIf="!loadingFeedbacks && feedbacks.length > 0" class="space-y-6">
+            <div *ngFor="let feedback of feedbacks; let last = last" [class.border-b]="!last" [class.border-gray-200]="!last" [class.pb-6]="!last">
+              <p class="text-[12px] font-semibold text-gray-500 mb-2">{{ formatFeedbackDate(feedback.createdAt) }}</p>
+              <p-rating [ngModel]="feedback.rating" [readonly]="true" [stars]="5" class="mb-3" [style]="{ '--p-rating-gap': '0.6rem' }"></p-rating>
+              <div class="flex items-center gap-2 mb-3">
+                <div class="w-[26px] h-[26px] bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium">
+                  {{ getReviewerInitials(feedback.reviewer) }}
+                </div>
+                <p class="text-sm font-medium">{{ feedback.reviewer?.firstName }} {{ feedback.reviewer?.lastName }}</p>
+              </div>
+              <p class="text-sm text-gray-700">{{ feedback.review }}</p>
+            </div>
+          </div>
+
+          <!-- No feedback state -->
+          <div *ngIf="!loadingFeedbacks && feedbacks.length === 0" class="text-center py-8">
+            <p class="text-gray-500">Noch keine Bewertungen vorhanden</p>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+
+      <!-- Qualifikation section - Updated to use API data -->
+      <p-accordion-panel value="2">
+        <p-accordion-header>Qualifikation</p-accordion-header>
+        <p-accordion-content>
+          <div class="flex flex-col gap-y-[24px]">
+            <div class="grid grid-cols-1 gap-6">
+              <div class="flex gap-x-[100px] text-[14px]">
+                <div>
+                  <div *ngFor="let qualification of staffMember.qualifications" class="mb-4">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="w-[10px] h-[10px] rounded-full bg-primary-500 inline-flex"></span>
+                      <span>{{ qualification.name }}</span>
+                    </div>
+                    <!-- Show specializations for this job type -->
+                    <div *ngFor="let specialization of getSpecializationsForJobType(qualification.name)" class="flex items-center gap-2 mb-2 ml-6">
+                      <span class="w-[10px] h-[10px] rounded-full bg-green-500 inline-flex"></span>
+                      <span>{{ specialization.specialization.name }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex flex-col gap-y-2">
+                  <span *ngFor="let qualification of staffMember.qualifications">Kommentar: {{ qualification.comment || 'Kein Kommentar' }}</span>
+                </div>
+              </div>
+            </div>
+            <!-- Show education from API -->
+            <div *ngIf="staffMember.education && staffMember.education.length > 0">
+              <span class="font-bold">Ausbildung:</span>
+              <p class="text-[16px]" *ngFor="let edu of staffMember.education">- {{ edu.activity }} ({{ edu.graduationDate }}) bei {{ edu.company }}</p>
+            </div>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+
+      <!-- Referenzen section - Updated with API data -->
+      <p-accordion-panel value="3">
+        <p-accordion-header>Referenzen</p-accordion-header>
+        <p-accordion-content>
+          <div *ngIf="staffMember.references && staffMember.references.length > 0" class="flex flex-col gap-y-4">
+            <div *ngFor="let reference of staffMember.references" class="border-b border-gray-200 pb-4">
+              <h4 class="font-bold text-[16px]">{{ reference.company }}</h4>
+              <p class="text-[14px]"><span class="font-semibold">Tätigkeit:</span> {{ reference.activity }}</p>
+              <p class="text-[14px]" *ngIf="reference.branche"><span class="font-semibold">Branche:</span> {{ reference.branche }}</p>
+              <p class="text-[14px]"><span class="font-semibold">Zeitraum:</span> {{ reference.startDate | euDate }} - {{ reference.endDate | euDate }}</p>
+            </div>
+          </div>
+          <div *ngIf="!staffMember.references || staffMember.references.length === 0">
+            <p class="text-gray-500">Keine Referenzen verfügbar</p>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+
+      <!-- Sprache section - Updated with API data -->
+      <p-accordion-panel value="4">
+        <p-accordion-header>Sprache</p-accordion-header>
+        <p-accordion-content>
+          <div class="grid grid-cols-[120px_1fr] gap-y-2">
+            <ng-container *ngFor="let language of staffMember.languages">
+              <p class="font-bold">{{ language.name }}</p>
+              <p class="text-gray-500">{{ language.level }}</p>
+            </ng-container>
+            <!-- Fallback if no language data -->
+            <ng-container *ngIf="!staffMember.languages || staffMember.languages.length === 0">
+              <p class="font-bold">Deutsch</p>
+              <p class="text-gray-500">Muttersprache</p>
+              <p class="font-bold">English</p>
+              <p class="text-gray-500">Fließend</p>
+            </ng-container>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+
+      <!-- Kundenprojekte section -->
+      <p-accordion-panel value="5">
+        <p-accordion-header>Kundenprojekte (Mit Akzente)</p-accordion-header>
+        <p-accordion-content>
+          <div class="flex gap-x-[200px] text-[14px] items-end">
+            <!-- Current Projects -->
+            <div class="flex flex-col gap-y-2">
+              <div *ngIf="staffMember.projects?.current && staffMember.projects.current.length > 0; else noCurrentProjects">
+                <div *ngFor="let project of staffMember.projects.current" class="flex items-center gap-2">
+                  <span class="w-[10px] h-[10px] rounded-full bg-primary-500"></span>
+                  <span>{{ project.name }} ({{ formatProjectYear(project.createdAt) }})</span>
+                </div>
+              </div>
+              <ng-template #noCurrentProjects>
+                <div class="flex items-center gap-2">
+                  <span class="w-[10px] h-[10px] rounded-full bg-primary-500"></span>
+                  <span class="text-gray-500">Keine aktuellen Projekte</span>
+                </div>
+              </ng-template>
+            </div>
+
+            <!-- Past Projects -->
+            <div class="flex flex-col gap-y-2">
+              <h4 class="font-bold">Vergangene Kundenprojekte</h4>
+              <div *ngIf="staffMember.projects?.past && staffMember.projects.past.length > 0; else noPastProjects">
+                <div *ngFor="let project of staffMember.projects.past" class="flex items-center gap-2">
+                  <span class="w-[10px] h-[10px] rounded-full bg-red-500"></span>
+                  <span>{{ project.name }} ({{ formatProjectYear(project.createdAt) }})</span>
+                </div>
+              </div>
+              <ng-template #noPastProjects>
+                <div class="flex items-center gap-2">
+                  <span class="w-[10px] h-[10px] rounded-full bg-red-500"></span>
+                  <span class="text-gray-500">Keine vergangenen Projekte</span>
+                </div>
+              </ng-template>
+            </div>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+
+      <!-- Dateien section - Updated with API data -->
+      <p-accordion-panel value="6">
+        <p-accordion-header>Dateien</p-accordion-header>
+        <p-accordion-content>
+          <div class="flex gap-x-4">
+            <!-- Portrait -->
+            <div *ngIf="staffMember.files.portrait">
+              <p class="mb-2">Portrait</p>
+              <div class="h-[155px] w-[125px] overflow-hidden rounded-[10px] border border-gray-300">
+                <p-image [src]="staffMember.files.portrait.file.path" alt="Portrait" imageClass="w-full h-full object-cover" [preview]="true" />
+              </div>
+            </div>
+            <!-- Full Body Shot -->
+            <div *ngIf="staffMember.files.fullBodyShot">
+              <p class="mb-2 text-[16px]">Ganzkörperaufnahme</p>
+              <div class="h-[155px] w-[125px] overflow-hidden rounded-[10px] border border-gray-300">
+                <p-image [src]="staffMember.files.fullBodyShot.file.path" alt="Ganzkörperaufnahme" imageClass="w-full h-full object-cover" [preview]="true" />
+              </div>
+            </div>
+            <!-- Resume -->
+            <a [href]="staffMember.files.resume.file.path" target="_blank" *ngIf="staffMember.files.resume" class="group">
+              <p class="mb-2 text-[16px]">Lebenslauf</p>
+              <div class="h-[155px] w-[125px] flex items-center justify-center border border-gray-300 rounded-[10px]">
+                <div class="text-red-600 p-2 bg-red-50 rounded group-hover:bg-red-100 duration-300">PDF</div>
+              </div>
+            </a>
+            <!-- Additional Attachments -->
+            <a [href]="attachment.file.path" target="_blank" *ngFor="let attachment of staffMember.files.additionalAttachments; let i = index" class="group">
+              <p class="mb-2 text-[16px]">Anhang {{ i + 1 }}</p>
+              <div class="h-[155px] w-[125px] flex items-center justify-center border border-gray-300 rounded-[10px]">
+                <div class="text-red-600 p-2 bg-red-50 rounded group-hover:bg-red-100 duration-300">PDF</div>
+              </div>
+            </a>
+            <!-- Fallback default image if no portrait -->
+            <div *ngIf="!staffMember.files.portrait">
+              <p class="mb-2">Portrait</p>
+              <div class="h-[155px] w-[125px] overflow-hidden rounded-[10px] border border-gray-300">
+                <p-image [src]="staffMember.image" alt="Foto 1" imageClass="w-full h-full object-cover" [preview]="true" />
+              </div>
+            </div>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+    </p-accordion>
+  </div>
+
+  <!-- Feedback Dialog -->
+  <p-dialog
+    [(visible)]="feedbackDialogVisible"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '550px' }"
+    [contentStyle]="{ padding: '2rem', borderRadius: '8px' }"
+    [showHeader]="false"
+    [closeOnEscape]="true"
+    [dismissableMask]="true"
+  >
+    <div class="relative font-poppins">
+      <!-- Close button -->
+      <button class="absolute -top-8 -right-2 p-2 text-gray-500 hover:text-gray-700" (click)="feedbackDialogVisible = false" [disabled]="submittingFeedback">
+        <span class="text-xl">&times;</span>
+      </button>
+
+      <!-- Title -->
+      <h2 class="text-center text-2xl text-[24px] font-medium mb-6">Bewertung für {{ staffMember?.firstName }} {{ staffMember?.lastName }}</h2>
+
+      <!-- Rating question -->
+      <p class="text-center text-[16px] mb-4">Wie würden Sie die Zusammenarbeit mit {{ staffMember?.firstName }} bewerten?</p>
+
+      <!-- Star rating -->
+      <div class="flex justify-center mb-6">
+        <p-rating [(ngModel)]="rating" [stars]="5" [disabled]="submittingFeedback" [style]="{ '--p-rating-icon-size': '2rem', '--p-rating-gap': '1rem' }"></p-rating>
+      </div>
+
+      <!-- Review text area -->
+      <div class="mb-6">
+        <textarea
+          [(ngModel)]="reviewText"
+          pInputTextarea
+          [disabled]="submittingFeedback"
+          class="w-full p-4 bg-gray-100 rounded-md border border-gray-100 focus:outline-none focus:ring-0 focus:border focus:border-primary-500"
+          rows="5"
+          placeholder="Schreiben Sie eine Bewertung..."
+          maxlength="1000"
+        ></textarea>
+        <div class="text-right text-xs text-gray-500 mt-1">{{ reviewText.length }}/1000 Zeichen</div>
+      </div>
+
+      <!-- Submit button -->
+      <div class="flex justify-center">
+        <button
+          (click)="submitFeedback()"
+          [disabled]="submittingFeedback || !rating || !reviewText.trim()"
+          class="py-3 px-4 w-full bg-[#007296] hover:bg-[#005d7a] disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-[16px] font-semibold rounded-full transition-colors flex items-center justify-center gap-2"
+        >
+          <div *ngIf="submittingFeedback" class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+          {{ submittingFeedback ? 'Wird gesendet...' : 'Bewertung senden' }}
+        </button>
+      </div>
+    </div>
+  </p-dialog>
+</section>

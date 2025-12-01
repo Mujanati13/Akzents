@@ -1,0 +1,12 @@
+.p-datatable.p-datatable-striped .p-datatable-tbody > tr:nth-child(odd):not(.p-datatable .p-datatable .p-datatable-tbody > tr) {
+  background-color: #f1f1f1 !important;
+}
+
+.p-datatable.p-datatable-striped .p-datatable-tbody > tr:nth-child(even):not(.p-datatable .p-datatable .p-datatable-tbody > tr) {
+  background-color: white !important;
+}
+
+// Ensure nested table rows always have white background
+.p-datatable .p-datatable .p-datatable-tbody > tr {
+  background-color: white !important;
+}

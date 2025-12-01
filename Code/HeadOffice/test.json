@@ -1,0 +1,50 @@
+[
+    {
+        "FILIALE\n(Text)": "Galeria",
+        "STRABE +\nHAUSNUM\nMER": "Musterstraße 1",
+        "PLZ": 12345,
+        "ORT": "Hannover",
+        "LAND": "Deutschland",
+        "TELEFON\nFILIALE\n(Text)": "0971/123456",
+        "NOTIZ\n(Text)": "Start ab 8 Uhr",
+        "MERCHANDISER\n(Text)": "Rooney Valenzuela",
+        "BESUCHSDATUM": "24/03/2025",
+        "Report bis": "24/05/2025",
+        "Alles nach Vorgabe?\n1. JA\n2. NEIN": "Ja",
+        "Feedback\n1. JA\n2. NEIN": "Nein",
+        "FRAGE 1:\n\"Wie ist die Situation vor Ort?\"": "Something as an answer",
+        "FRAGE 2:\n\"Gab es Probleme\n1. JA\n2. NEIN\"": "Nein",
+        "FRAGE 3:\n\"Welche Farben gibt es?\n1. Grün\n2. Rot\n3. Blau\n4. Gelb\"": "Grün,Rot,Blau"
+    }
+]
+
+[
+    {
+        "branch": "Galeria",
+        "street": "Musterstraße 1",
+        "zip": "12345",
+        "city": "Hannover",
+        "country": "Deutschland",
+        "phone": "0971/123456",
+        "note": "Start ab 8 Uhr",
+        "merchandiser": "Rooney Valenzuela",
+        "plannedOn": "05-15-25",
+        "reportTo": "05-20-25",
+        "isSpecCompliant": true,
+        "feedback": true,
+        "questions": [
+            {
+                "question": "Wie ist die Situation vor Ort?",
+                "answer": "Something as an answer"
+            },
+            {
+                "question": "Gab es Probleme?",
+                "answer": false
+            },
+            {
+                "question": "Welche Farben gibt es?",
+                "answer": "Grün,Rot,Blau"
+            }
+        ]
+    },
+]

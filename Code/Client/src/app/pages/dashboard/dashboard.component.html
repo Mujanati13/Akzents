@@ -1,0 +1,118 @@
+<section class="pb-6">
+  <h2 translate class="flex text-primary-700 mb-10"><app-icon name="dashboard" class="w-9 flex items-center mr-1 text-primary-700" /><span class="text-[32px] font-bold font-dm">Dashboard</span></h2>
+
+  <!-- Loading state -->
+  <div *ngIf="loading" class="flex justify-center items-center h-64 mb-10">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error" class="bg-red-50 p-4 rounded-md mb-6">
+    <p class="text-red-800">Es ist ein Fehler beim Laden der Dashboard-Daten aufgetreten. Bitte versuchen Sie es später erneut.</p>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!loading && !error">
+    <!-- Filtering controls -->
+    <div class="mb-8 grid grid-cols-1 lg:grid-cols-[30px_257px_257px_257px_257px_276px_auto] xl:grid-cols-[30px_257px_257px_257px_257px_276px_auto] gap-[15px] items-center">
+      <app-icon name="filter" class="w-9 flex items-center mr-1 text-primary-700" />
+      <button
+        class="h-[49px] font-dm font-bold text-primary-500 rounded-md transition-shadow duration-200 cursor-pointer"
+        [ngStyle]="{
+          'box-shadow': activeFilter === 'all' ? '0 0 0 3px rgba(0, 111, 155, 0.7)' : '0 0 0 3px rgba(0, 0, 0, 0.09)',
+        }"
+        (click)="showAllClients()"
+      >
+        Alle Projekte
+      </button>
+
+      <button
+        class="h-[49px] font-dm font-bold text-primary-500 rounded-md transition-shadow duration-200 cursor-pointer"
+        [ngStyle]="{
+          'box-shadow': activeFilter === 'running' ? '0 0 0 3px rgba(0, 111, 155, 0.7)' : '0 0 0 3px rgba(0, 0, 0, 0.09)',
+        }"
+        (click)="showRunningProjects()"
+      >
+        Laufende Projekte
+      </button>
+
+      <button
+        class="h-[49px] font-dm font-bold text-primary-500 rounded-md transition-shadow duration-200 cursor-pointer"
+        [ngStyle]="{
+          'box-shadow': activeFilter === 'completed' ? '0 0 0 3px rgba(0, 111, 155, 0.7)' : '0 0 0 3px rgba(0, 0, 0, 0.09)',
+        }"
+        (click)="showCompletedProjects()"
+      >
+        Abgeschlossene Projekte
+      </button>
+
+      <app-date-range-picker [(selectedRange)]="dateRange" (rangeSelected)="onRangeSelected($event)" position="right"> </app-date-range-picker>
+
+      <div class="justify-self-start">
+        <button
+          *ngIf="hasActiveFilters()"
+          (click)="clearFilters()"
+          class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors text-sm cursor-pointer"
+        >
+          Alle anzeigen
+        </button>
+      </div>
+    </div>
+
+    <!-- Empty state when no results -->
+    <div *ngIf="filteredProjects.length === 0" class="text-center py-8">
+      <p class="text-gray-500">Keine Projekte gefunden</p>
+    </div>
+
+    <!-- Project cards grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div *ngFor="let item of filteredProjects" style="box-shadow: 0px 0px 3.5px 3px rgba(0, 0, 0, 0.13)" class="bg-white rounded-[20px] px-[30px] py-[21px] flex flex-col space-y-6">
+        <a 
+          [routerLink]="['/projects', item.id]" 
+          class="flex justify-between items-start"
+        >
+          <div>
+            <h3 class="text-[23px] font-extrabold font-dm cursor-pointer hover:text-primary-600">{{ item.name }}</h3>
+            <p class="text-[16.5px] font-black font-dm">{{ item.weekNumber }} / {{ item.dateRange }}</p>
+          </div>
+          <app-favorite-toggle class="h-6 w-6 flex-shrink-0" [isFavorite]="item.isFavorite" (favoriteChange)="onFavoriteChanged($event, item)" />
+        </a>
+        <ul class="text-sm text-primary-200 space-y-2">
+          <li>
+            <a
+              [routerLink]="['/projects', item.id]" 
+              [queryParams]="{ status: 'new' }"
+              class="cursor-pointer block"
+            >
+              <span class="border rounded-full aspect-square px-1 text-black">{{ item.stats.new }}</span>
+              <span class="text-primary-500">neue Reports</span>
+            </a>
+          </li>
+          <li>
+            <a
+              [routerLink]="['/projects', item.id]" 
+              [queryParams]="{ status: 'ongoing' }"
+              class="cursor-pointer block"
+            >
+              <span class="border rounded-full aspect-square px-1 text-black">{{ item.stats.open }}</span>
+              <span class="text-primary-500">laufende Reports</span>
+            </a>
+          </li>
+          <li>
+            <a
+              [routerLink]="['/projects', item.id]" 
+              [queryParams]="{ status: 'completed' }"
+              class="cursor-pointer block"
+            >
+              <span class="border rounded-full aspect-square px-1 text-black">{{ item.stats.completed }}</span>
+              <span class="text-primary-500">abgeschlossene Reports</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- <div class="mt-4 flex justify-end">
+      <button class="px-4 border-2 border-gray-200 rounded-md py-2 align-self-end text-[14px] cursor-pointer">Mehr laden</button>
+    </div> -->
+  </div>
+</section>

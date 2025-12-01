@@ -1,0 +1,54 @@
+# DRAG-AND-DROP IMPLEMENTATION GUIDE
+
+## STEP 1: Update the TypeScript Component
+
+File: src/app/pages/clients/report-edit/report-edit.component.ts
+
+Add this import after line 6 (after the existing imports):
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+
+Add these methods BEFORE the saveReportPhotos() method:
+
+// Get Vorher images
+getVorherImages(photoIndex: number): ImageItem[] {
+  if (photoIndex === 0) return this.prepopulatedVorherImages1;
+  else if (photoIndex === 2) return this.prepopulatedVorherImages3;
+  return [];
+}
+
+// Get Nachher images  
+getNachherImages(photoIndex: number): ImageItem[] {
+  if (photoIndex === 0) return this.prepopulatedNachherImages1;
+  else if (photoIndex === 2) return this.prepopulatedNachherImages3;
+  return [];
+}
+
+// Get Nachher only images
+getNachherOnlyImages(photoIndex: number): ImageItem[] {
+  if (photoIndex === 1) return this.prepopulatedNachherImages2;
+  return [];
+}
+
+// Handle Vorher drop
+onVorherDropped(event: CdkDragDrop<ImageItem[]>, photoIndex: number): void {
+  if (event.previousContainer === event.container) {
+    moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+  }
+}
+
+// Handle Nachher drop
+onNachherDropped(event: CdkDragDrop<ImageItem[]>, photoIndex: number): void {
+  if (event.previousContainer === event.container) {
+    moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+  }
+}
+
+// Handle Nachher only drop
+onNachherOnlyDropped(event: CdkDragDrop<ImageItem[]>, photoIndex: number): void {
+  if (event.previousContainer === event.container) {
+    moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+  }
+}
+
+## STEP 2: Update the HTML (see detailed guide below)
+## STEP 3: Add CSS styles (see detailed guide below)

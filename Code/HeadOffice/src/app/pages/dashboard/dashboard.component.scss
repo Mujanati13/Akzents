@@ -1,0 +1,13 @@
+.p-confirmpopup {
+  margin-left: var(--p-confirmpopup-gutter);
+}
+.p-confirmpopup:after,
+.p-confirmpopup:before {
+  bottom: 100%;
+  left: 18.25rem;
+  content: " ";
+  height: 0;
+  width: 0;
+  position: absolute;
+  pointer-events: none;
+}

@@ -1,0 +1,10 @@
+.p-inputgroupaddon:first-child,
+.p-inputgroupaddon + .p-inputgroupaddon {
+  border-radius: 6px 0 0 6px;
+  min-width: auto;
+  padding-right: 0px;
+}
+.p-inputtext {
+  font-size: 11px;
+  padding-top: 23px;
+}

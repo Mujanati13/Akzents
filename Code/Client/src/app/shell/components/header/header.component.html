@@ -1,0 +1,61 @@
+<nav class="bg-white h-[78px] px-4 flex items-center justify-between">
+  <!-- Left Side: Hamburger Menu (Mobile) and Title -->
+  <div class="flex items-center">
+    <!-- Hamburger Menu (Mobile Only) -->
+    <button (click)="toggleSidebar()" class="mr-3 p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none md:hidden">
+      <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+
+    <!-- Language Selector -->
+    <app-language-selector></app-language-selector>
+  </div>
+
+  <!-- Right Side: Client Logo, Search, Notifications, User Profile -->
+  <div class="flex items-center space-x-4">
+    <!-- Client Company Logo - Show when a client company is active -->
+    <div *ngIf="currentClientCompany" class="flex items-center gap-3">
+      <div class="h-10 flex items-center px-3 py-1">
+        <img [src]="clientLogo || '/images/placeholder.png'" [alt]="currentClientCompany?.name" class="h-[47px] max-w-[120px] object-contain" (error)="onImageError($event)" />
+      </div>
+
+      <!-- Client Company Dropdown - Only show if multiple companies -->
+      <div *ngIf="getClientCompanies().length > 1" class="relative client-dropdown">
+        <button (click)="toggleClientDropdown()" class="flex items-center space-x-1 px-2 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded">
+          <span>{{ currentClientCompany?.name }}</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+
+        <!-- Dropdown Menu -->
+        <div *ngIf="showClientDropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border">
+          <div class="py-1">
+            <div
+              *ngFor="let company of getClientCompanies()"
+              (click)="switchClientCompany(company); showClientDropdown = false"
+              class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer flex items-center space-x-2"
+              [class.bg-blue-50]="company.id === currentClientCompany?.id"
+            >
+              <img [src]="company.logo?.path || '/images/placeholder.png'" [alt]="company.name" class="w-6 h-6 object-contain" (error)="onImageError($event)" />
+              <span>{{ company.name }}</span>
+              <svg *ngIf="company.id === currentClientCompany?.id" class="w-4 h-4 text-blue-600 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fallback to regular client logo if no client company -->
+    <div *ngIf="!currentClientCompany && currentClient" class="flex items-center gap-3">
+      <div class="h-10 flex items-center px-3 py-1">
+        <img [src]="clientLogo || '/images/placeholder.png'" [alt]="currentClient?.name" class="h-[47px] max-w-[120px] object-contain" (error)="onImageError($event)" />
+      </div>
+    </div>
+
+    <!-- ...existing code... -->
+  </div>
+</nav>

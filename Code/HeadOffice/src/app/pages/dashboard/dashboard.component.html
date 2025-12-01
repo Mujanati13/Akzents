@@ -1,0 +1,408 @@
+<section class="pb-6">
+  <div class="flex justify-between items-center">
+    <h2 translate class="flex text-primary-700 mb-8"><app-icon name="dashboard"
+        class="w-9 flex items-center mr-1 text-primary-700" /><span class="text-[32px] font-bold font-dm">Dashboard</span>
+    </h2>
+        <div class="flex justify-end mb-4">
+      <button *ngIf="hasActiveDashboardFilters()" (click)="clearDashboardFilters()"
+        class="px-4 py-2 bg-gray-500 cursor-pointer text-white rounded-md hover:bg-gray-600 transition-colors text-sm">
+        Alle anzeigen
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div *ngIf="loading" class="flex justify-center items-center h-64 mb-8">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error" class="bg-red-50 p-4 rounded-md mb-6">
+    <p class="text-red-800">Es ist ein Fehler beim Laden der Dashboard-Daten aufgetreten. Bitte versuchen Sie es später
+      erneut.</p>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!loading && !error">
+
+    <!-- First table - New Reports -->
+    <h4 class="text-[22px] mb-4 font-bold font-dm ml-2">Neue Reports ({{ getFilteredNewReports().length }})</h4>
+    <div class="mb-8 border-2 border-[#F1F1F1] rounded-lg">
+      <p-table [value]="getFilteredNewReports()" stripedRows [scrollable]="true" scrollHeight="250px" dataKey="id"
+        [tableStyle]="{ 'min-width': '60rem' }" [columns]="getNewProductsVisibleColumns()" [sortField]="sortField"
+        [sortOrder]="sortOrder" [reorderableColumns]="true" (onColReorder)="onNewProductsColReorder($event)">
+        <ng-template #header let-columns>
+          <tr>
+            <th class="rounded-l-lg">
+              <div class="flex gap-x-2 items-center">
+                <div class="flex space-x-2 items-center">
+                  <span>Status</span>
+                  <app-icon name="table_sort" class="w-3 cursor-pointer" (click)="onSort('inventoryStatus')" />
+                </div>
+
+              </div>
+            </th>
+            <th *ngFor="let col of columns" pReorderableColumn>
+              <div class="flex gap-x-2 items-center">
+                <div class="flex space-x-2 items-center">
+                  <span>{{ col.header }}</span>
+                  <app-icon name="table_sort" class="w-3 cursor-pointer" (click)="onSort(col.field)" />
+                </div>
+                <div class="items-center cursor-pointer text-xs"
+                  (click)="openNewReportsColumnFilter(col.field, $event)">
+                  <svg class="w-3 h-3"
+                    [class.text-green-500]="getNewReportsColumnFilterValue(col.field) && getNewReportsColumnFilterValue(col.field).length > 0"
+                    [class.text-white]="!getNewReportsColumnFilterValue(col.field) || getNewReportsColumnFilterValue(col.field).length === 0"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                </div>
+              </div>
+            </th>
+            <th class="rounded-r-lg">
+              <div class="flex items-center justify-end gap-3">
+                <span class="flex items-center cursor-pointer gap-1"
+                  (click)="toggleSettingsPopover(newProductsSettingsPopover, $event)">
+                  <span>Settings</span>
+                  <span class="pi pi-cog text-sm!"></span>
+                </span>
+              </div>
+            </th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-report let-columns="columns">
+          <tr>
+            <td class="rounded-l-lg">
+              <span *ngIf="report?.status"
+                class="text-white w-[70px] h-[23px] uppercase text-xs rounded-sm flex items-center justify-center"
+                [style.background-color]="report.status?.color">
+                {{ report.status?.name }}
+              </span>
+            </td>
+            <td *ngFor="let col of columns">
+              <ng-container [ngSwitch]="col.field">
+                <ng-container *ngSwitchCase="'kunde'">
+                  {{ getReportKunde(report) }}
+                </ng-container>
+                <ng-container *ngSwitchCase="'store'">
+                  {{ getReportStore(report) }}
+                </ng-container>
+                <ng-container *ngSwitchCase="'ort'">
+                  {{ getReportOrt(report) }}
+                </ng-container>
+                <ng-container *ngSwitchCase="'besuchsdatum'">
+                  {{ getReportBesuchsdatum(report) | euDate }}
+                </ng-container>
+                <ng-container *ngSwitchCase="'vm'">
+                  {{ getReportVM(report) }}
+                </ng-container>
+                <ng-container *ngSwitchDefault>
+                  {{ report[col.field] || '-' }}
+                </ng-container>
+              </ng-container>
+            </td>
+            <td class="rounded-r-lg">
+              <div class="flex space-x-3 justify-end">
+                <a [routerLink]="['/clients', report.clientCompany?.id, 'projects', report.project?.id, 'reports', report.id]"
+                  [queryParams]="{ referrer: 'dashboard', reportStatus: report.status?.name || '' }">
+                  <app-icon name="resizeable_eye"
+                    class="w-5 h-5 flex items-center cursor-pointer text-primary-500 hover:text-primary-600"
+                    title="Anzeigen (Rechtsklick für neuen Tab)" />
+                </a>
+                <a [routerLink]="['/clients', report.clientCompany?.id, 'projects', report.project?.id, 'edit-report', report.id]"
+                  [queryParams]="{ referrer: 'dashboard' }">
+                  <app-icon name="pencil"
+                    class="w-4.5 h-4.5 flex items-center cursor-pointer text-primary-500 hover:text-primary-600"
+                    title="Bearbeiten (Rechtsklick für neuen Tab)" />
+                </a>
+                <a [href]="'mailto:' + (report.merchandiser?.user?.email || '')"
+                  *ngIf="report.merchandiser?.user?.email" title="E-Mail senden">
+                  <app-icon name="envelope" class="w-4.5 h-4.5 flex items-center cursor-pointer text-primary-500"
+                    title="E-Mail an VM senden" />
+                </a>
+                <app-favorite-toggle class="w-4.5 h-4.5 flex-shrink-0" [isFavorite]="report.isFavorite || false"
+                  (favoriteChange)="onFavoriteChanged($event, report)" />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+      <p-popover #newProductsSettingsPopover>
+        <div class="flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-semibold text-sm"> Settings</span>
+            <button type="button" (click)="onSettingsPopoverClose(newProductsSettingsPopover, $event)"
+              class="text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <p-multiselect display="chip" [options]="cols" [(ngModel)]="newProductsColumns"
+            (onChange)="onNewProductsColumnsChange($event.value)" optionLabel="header"
+            selectedItemsLabel="{0} columns selected" [style]="{ 'min-width': '300px' }" placeholder="Choose Columns" />
+        </div>
+      </p-popover>
+    </div>
+
+    <!-- Second table - Rejected Reports -->
+    <h4 class="text-[22px] mb-4 font-bold font-dm ml-2">Fällige / Fehlende Reports ({{
+      getFilteredRejectedReports().length }})</h4>
+    <div class="mb-8 border-2 border-[#F1F1F1] rounded-lg">
+      <p-table [value]="getFilteredRejectedReports()" stripedRows [scrollable]="true" scrollHeight="250px" dataKey="id"
+        [tableStyle]="{ 'min-width': '60rem' }" [columns]="getOverdueProductsVisibleColumns()"
+        [sortField]="overdueSortField" [sortOrder]="overdueSortOrder" [reorderableColumns]="true"
+        (onColReorder)="onOverdueProductsColReorder($event)">
+        <ng-template #header let-columns>
+          <tr>
+            <th class="rounded-l-lg">
+              <div class="flex gap-x-2 items-center">
+                <div class="flex space-x-2 items-center">
+                  <span>Status</span>
+                  <app-icon name="table_sort" class="w-3 cursor-pointer" (click)="onOverdueSort('inventoryStatus')" />
+                </div>
+
+              </div>
+            </th>
+            <th *ngFor="let col of columns" pReorderableColumn>
+              <div class="flex gap-x-2 items-center">
+                <div class="flex space-x-2 items-center">
+                  <span>{{ col.header }}</span>
+                  <app-icon name="table_sort" class="w-3 cursor-pointer" (click)="onOverdueSort(col.field)" />
+                </div>
+                <div class="items-center cursor-pointer text-xs"
+                  (click)="openRejectedReportsColumnFilter(col.field, $event)">
+                  <svg class="w-3 h-3"
+                    [class.text-green-500]="getRejectedReportsColumnFilterValue(col.field) && getRejectedReportsColumnFilterValue(col.field).length > 0"
+                    [class.text-white]="!getRejectedReportsColumnFilterValue(col.field) || getRejectedReportsColumnFilterValue(col.field).length === 0"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                </div>
+              </div>
+            </th>
+            <th class="rounded-r-lg">
+              <div class="flex items-center justify-end gap-3">
+                <span class="flex items-center cursor-pointer gap-1"
+                  (click)="toggleSettingsPopover(overdueProductsSettingsPopover, $event)">
+                  <span>Settings</span>
+                  <span class="pi pi-cog text-sm!"></span>
+                </span>
+              </div>
+            </th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-report let-columns="columns">
+          <tr>
+            <td class="rounded-l-lg">
+              <span *ngIf="report?.status"
+                class="text-white w-[70px] h-[23px] uppercase text-xs rounded-sm flex items-center justify-center"
+                [style.background-color]="report.status?.color">
+                {{ report.status?.name }}
+              </span>
+            </td>
+            <td *ngFor="let col of columns">
+              <ng-container [ngSwitch]="col.field">
+                <ng-container *ngSwitchCase="'kunde'">
+                  {{ getReportKunde(report) }}
+                </ng-container>
+                <ng-container *ngSwitchCase="'store'">
+                  {{ getReportStore(report) }}
+                </ng-container>
+                <ng-container *ngSwitchCase="'ort'">
+                  {{ getReportOrt(report) }}
+                </ng-container>
+                <ng-container *ngSwitchCase="'besuchsdatum'">
+                  {{ getReportBesuchsdatum(report) | euDate }}
+                </ng-container>
+                <ng-container *ngSwitchCase="'vm'">
+                  {{ getReportVM(report) }}
+                </ng-container>
+                <ng-container *ngSwitchDefault>
+                  {{ report[col.field] || '-' }}
+                </ng-container>
+              </ng-container>
+            </td>
+            <td class="rounded-r-lg">
+              <div class="flex space-x-3 justify-end">
+                <a [routerLink]="['/clients', report.clientCompany?.id, 'projects', report.project?.id, 'reports', report.id]"
+                  [queryParams]="{ referrer: 'dashboard', reportStatus: report.status?.name || '' }">
+                  <app-icon name="resizeable_eye"
+                    class="w-5 h-5 flex items-center cursor-pointer text-primary-500 hover:text-primary-600"
+                    title="Anzeigen (Rechtsklick für neuen Tab)" />
+                </a>
+                <a [routerLink]="['/clients', report.clientCompany?.id, 'projects', report.project?.id, 'edit-report', report.id]"
+                  [queryParams]="{ referrer: 'dashboard' }">
+                  <app-icon name="pencil"
+                    class="w-4.5 h-4.5 flex items-center cursor-pointer text-primary-500 hover:text-primary-600"
+                    title="Bearbeiten (Rechtsklick für neuen Tab)" />
+                </a>
+                <a [href]="'mailto:' + (report.merchandiser?.user?.email || '')"
+                  *ngIf="report.merchandiser?.user?.email" title="E-Mail senden">
+                  <app-icon name="envelope" class="w-4.5 h-4.5 flex items-center cursor-pointer text-primary-500"
+                    title="E-Mail an VM senden" />
+                </a>
+                <app-favorite-toggle class="w-4.5 h-4.5 flex-shrink-0" [isFavorite]="report.isFavorite || false"
+                  (favoriteChange)="onFavoriteChanged($event, report)" />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+      <p-popover #overdueProductsSettingsPopover>
+        <div class="flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-semibold text-sm">Column Settings</span>
+            <button type="button" (click)="onSettingsPopoverClose(overdueProductsSettingsPopover, $event)"
+              class="text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <p-multiselect display="chip" [options]="cols" [(ngModel)]="overdueProductsColumns"
+            (onChange)="onOverdueProductsColumnsChange($event.value)" optionLabel="header"
+            selectedItemsLabel="{0} columns selected" [style]="{ 'min-width': '300px' }" placeholder="Choose Columns" />
+        </div>
+      </p-popover>
+    </div>
+
+    <!-- Clients section -->
+    <h4 class="text-[22px] mb-4 font-bold font-dm ml-2">Kunden ({{ totalClientCompaniesCount }})</h4>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div *ngFor="let client of last4ClientCompanies; let i = index"
+        [ngClass]="{
+          'bg-green-50 border-2 border-green-500': isMyClient(client.id),
+          'bg-white border border-[#DEE2E6]': !isMyClient(client.id)
+        }"
+        [ngStyle]="{
+          'box-shadow': isMyClient(client.id) ? '0px 0px 3.5px 3px rgba(0, 128, 0, 0.13)' : '0px 0px 3.5px 3px rgba(0, 0, 0, 0.13)'
+        }"
+        class="rounded-[20px] px-[30px] pt-[21px] pb-[16px] flex flex-col space-y-4">
+        <div class="flex justify-between items-start h-[73px]">
+          <!-- Company logo -->
+          <a [routerLink]="['/clients', client.id]"
+            class="h-[53px] sm:h-[45px] md:h-[40px] max-w-[70%] flex items-center">
+            <img *ngIf="client.logo?.path; else defaultLogo" [src]="client.logo.path" [alt]="client.name"
+              class="h-full object-contain max-w-full" (error)="$event.target.style.display = 'none'" />
+            <ng-template #defaultLogo>
+              <div class="h-full w-20 bg-gray-100 rounded-lg flex items-center justify-center">
+                <span class="text-gray-400 text-xs font-bold">{{ client.name.charAt(0) }}</span>
+              </div>
+            </ng-template>
+          </a>
+          <app-favorite-toggle class="h-6 w-6 flex-shrink-0" [isFavorite]="client.isFavorite || false"
+            (favoriteChange)="onCardFavoriteChanged($event, client)" />
+        </div>
+        <ul class="text-sm text-primary-200 space-y-2">
+          <li>
+            <a *ngIf="(client.reportCounts?.newReports || 0) > 0" [routerLink]="['/clients', client.id]" [queryParams]="{ status: 'new' }" class="cursor-pointer block">
+              <span class="border rounded-full aspect-square px-1 text-black">{{ client.reportCounts?.newReports || 0
+                }}</span>
+              <span class="text-primary-500">neue Reports</span>
+            </a>
+            <span *ngIf="(client.reportCounts?.newReports || 0) === 0" class="block ">
+              <span class="border rounded-full aspect-square px-1 text-black">{{ client.reportCounts?.newReports || 0
+                }}</span>
+              <span class="text-primary-500">neue Reports</span>
+            </span>
+          </li>
+          <li>
+            <a *ngIf="(client.reportCounts?.ongoingReports || 0) > 0" [routerLink]="['/clients', client.id]" [queryParams]="{ status: 'ongoing' }"
+              class="cursor-pointer block">
+              <span class="border rounded-full aspect-square px-1 text-black">{{ client.reportCounts?.ongoingReports ||
+                0 }}</span>
+              <span class="text-primary-500">offene Reports</span>
+            </a>
+            <span *ngIf="(client.reportCounts?.ongoingReports || 0) === 0" class="block ">
+              <span class="border rounded-full aspect-square px-1 text-black">{{ client.reportCounts?.ongoingReports ||
+                0 }}</span>
+              <span class="text-primary-500">offene Reports</span>
+            </span>
+          </li>
+          <li>
+            <a *ngIf="(client.reportCounts?.completedReports || 0) > 0" [routerLink]="['/clients', client.id]" [queryParams]="{ status: 'completed' }"
+              class="cursor-pointer block">
+              <span class="border rounded-full aspect-square px-1 text-black">{{ client.reportCounts?.completedReports
+                || 0 }}</span>
+              <span class="text-primary-500">abgeschlossene Reports</span>
+            </a>
+            <span *ngIf="(client.reportCounts?.completedReports || 0) === 0" class="block ">
+              <span class="border rounded-full aspect-square px-1 text-black">{{ client.reportCounts?.completedReports
+                || 0 }}</span>
+              <span class="text-primary-500">abgeschlossene Reports</span>
+            </span>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="mt-4 flex justify-end">
+      <a [routerLink]="['/clients', 'list']"
+        class="px-4 border-2 border-gray-200 rounded-md py-2 align-self-end text-[14px] cursor-pointer inline-block">Alle
+        zeigen</a>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- New Reports Generic Column Filter Popover -->
+<p-popover #newReportsColumnFilterPopover [style]="{ 'max-width': '90vw' }">
+  <div class="flex flex-col" style="width: fit-content; min-width: 300px;">
+    <div class="flex items-center justify-between mb-2">
+      <span class="font-semibold text-sm">Filter</span>
+      <button type="button" (click)="newReportsColumnFilterPopover.hide()"
+        class="text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <p-multiselect display="chip" [(ngModel)]="newReportsColumnFilters[currentNewReportsFilterField]"
+      [options]="getNewReportsFilterOptions(currentNewReportsFilterField)"
+      [placeholder]="'Alle ' + (getColumnHeader(currentNewReportsFilterField) || currentNewReportsFilterField)"
+      [showClear]="true" [style]="{ 'width': 'auto', 'min-width': '300px' }" selectedItemsLabel="{0} ausgewählt">
+    </p-multiselect>
+  </div>
+</p-popover>
+
+<!-- Rejected Reports Status Filter Popover -->
+<p-popover #rejectedReportsStatusFilterPopover [style]="{ 'max-width': '90vw' }">
+  <div class="flex flex-col" style="width: fit-content; min-width: 300px;">
+    <div class="flex items-center justify-between mb-2">
+      <span class="font-semibold text-sm">Filter</span>
+      <button type="button" (click)="rejectedReportsStatusFilterPopover.hide()"
+        class="text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <p-multiselect display="chip" [(ngModel)]="rejectedReportsColumnFilters['status']"
+      [options]="getRejectedReportsFilterOptions('status')" placeholder="Alle Status" [showClear]="true"
+      [style]="{ 'width': 'auto', 'min-width': '300px' }" selectedItemsLabel="{0} Status ausgewählt">
+    </p-multiselect>
+  </div>
+</p-popover>
+
+<!-- Rejected Reports Generic Column Filter Popover -->
+<p-popover #rejectedReportsColumnFilterPopover [style]="{ 'max-width': '90vw' }">
+  <div class="flex flex-col" style="width: fit-content; min-width: 300px;">
+    <div class="flex items-center justify-between mb-2">
+      <span class="font-semibold text-sm">Filter</span>
+      <button type="button" (click)="rejectedReportsColumnFilterPopover.hide()"
+        class="text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <p-multiselect display="chip" [(ngModel)]="rejectedReportsColumnFilters[currentRejectedReportsFilterField]"
+      [options]="getRejectedReportsFilterOptions(currentRejectedReportsFilterField)"
+      [placeholder]="'Alle ' + (getColumnHeader(currentRejectedReportsFilterField) || currentRejectedReportsFilterField)"
+      [showClear]="true" [style]="{ 'width': 'auto', 'min-width': '300px' }" selectedItemsLabel="{0} ausgewählt">
+    </p-multiselect>
+  </div>
+</p-popover>

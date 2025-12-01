@@ -1,0 +1,315 @@
+<section>
+  <h2 translate class="flex text-primary-700 mb-8">
+    <app-icon name="search" class="w-8 flex items-center mr-1 text-primary-700" />
+    <span class="text-[32px] font-bold font-dm">Filiale suchen</span>
+  </h2>
+
+  <!-- Search section -->
+  <div class="bg-white rounded-[20px] p-6 border border-gray-200 mb-6 flex flex-col gap-y-6">
+    <div class="flex flex-wrap gap-4 items-center">
+      <!-- Show All Stores Button -->
+      <button
+        class="h-[49px] w-[326px] font-dm font-bold text-primary-500 rounded-md transition-shadow duration-200 cursor-pointer"
+        [ngStyle]="{
+          'box-shadow': '0 0 0 3px rgba(0, 0, 0, 0.09)',
+        }"
+        (click)="showAllStores()"
+      >
+        Alle Filialen anzeigen
+      </button>
+
+      <!-- Search Input with integrated button -->
+      <!-- <div class="flex-1 min-w-[300px] relative">
+        <div class="relative flex rounded-md border border-gray-300 overflow-hidden focus-within:border-primary-500">
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            placeholder="Suche z.B. nach Frankfurt oder München"
+            class="h-[51px] px-4 w-full border-none font-inter text-sm focus:outline-none focus:ring-0"
+          />
+          <button
+            (click)="startSearch()"
+            class="h-[38px] cursor-pointer px-6 bg-primary-500 text-white font-dm font-semibold text-[14px] flex items-center gap-2 absolute right-2 top-1/2 transform -translate-y-1/2 rounded-[4px]"
+          >
+            Suchen starten <app-icon name="chevron-right" class="w-2 h-2" />
+          </button>
+        </div>
+      </div> -->
+      <div class="relative flex-1 w-full">
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (input)="filterFilialen()"
+          placeholder="Suche z.B. nach Frankfurt oder München"
+          class="h-[54px] px-4 pr-10 border border-gray-300 rounded-md font-inter text-sm w-full focus:outline-none focus:ring-0 focus:border-primary-500"
+        />
+        <app-icon name="search" class="absolute right-2 top-1/2 transform -translate-y-1/2 w-[19px] h-[19px] text-gray-500" />
+      </div>
+
+      <!-- Clear filters button -->
+      <div class="place-content-center">
+        <button
+          *ngIf="hasFilters()"
+          (click)="clearFilters()"
+          class="px-4 py-2 bg-gray-500 cursor-pointer text-white rounded-md hover:bg-gray-600 transition-colors text-sm">
+          Alle anzeigen
+        </button>
+      </div>
+    </div>
+
+    <!-- Enhanced p-table with column reordering and visibility -->
+    <p-table
+      [value]="filteredFilialen"
+      stripedRows
+      [scrollable]="true"
+      scrollHeight="78vh"
+      dataKey="id"
+      [tableStyle]="{ 'min-width': '60rem', 'max-width': '100%' }"
+      [expandedRowKeys]="expandedRows"
+      (onRowExpand)="onRowExpand($event)"
+      (onRowCollapse)="onRowCollapse($event)"
+      [columns]="getFilialenVisibleColumns()"
+      [reorderableColumns]="true"
+      (onColReorder)="onFilialenColReorder($event)"
+    >
+      <ng-template #header let-columns>
+        <tr>
+          <th class="rounded-l-lg">
+            <div class="flex space-x-2 items-center">
+              <span>Filiale</span>
+              <app-icon name="table_sort" class="w-3 cursor-pointer" [class.text-primary-500]="sortField === 'name'" (click)="onSort('name')" />
+            </div>
+          </th>
+          <th *ngFor="let col of columns" pReorderableColumn>
+            <div class="flex gap-x-2 items-center">
+              <div class="flex space-x-2 items-center">
+                <span>{{ col.header }}</span>
+                <app-icon name="table_sort" class="w-3 cursor-pointer" [class.text-primary-500]="sortField === col.field" (click)="onSort(col.field)" />
+              </div>
+              <span class="items-center cursor-pointer text-xs inline-flex relative" 
+                (click)="openFilialenColumnFilter(col.field, $event); $event.stopPropagation()">
+                <svg class="w-3 h-3"
+                  [class.text-green-500]="getFilialenColumnFilterValue(col.field) && getFilialenColumnFilterValue(col.field).length > 0"
+                  [class.text-white]="!getFilialenColumnFilterValue(col.field) || getFilialenColumnFilterValue(col.field).length === 0"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+              </span>
+            </div>
+          </th>
+          <th class="rounded-r-lg">
+            <div class="flex space-x-2 items-center justify-end cursor-pointer">
+              <span (click)="filialenColumnsPopover.toggle($event)">Settings</span>
+              <span class="pi pi-cog text-sm!" (click)="filialenColumnsPopover.toggle($event)"></span>
+            </div>
+          </th>
+        </tr>
+      </ng-template>
+
+      <ng-template #body let-filiale let-expanded="expanded" let-columns="columns">
+        <tr>
+          <td [pRowToggler]="filiale" class="cursor-pointer rounded-l-lg">
+            <div class="flex items-center">
+              <app-icon name="location" class="w-5 h-5 text-red-600 mr-2" />
+              <span>{{ filiale.name }}</span>
+            </div>
+          </td>
+          <td [pRowToggler]="filiale" class="cursor-pointer" *ngFor="let col of columns">
+            {{ filiale[col.field] }}
+          </td>
+          <td [pRowToggler]="filiale" class="cursor-pointer rounded-r-lg">
+            <!-- Actions column can be added here if needed -->
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template #expandedrow let-filiale>
+        <tr>
+          <td colspan="6" class="bg-gray-50 px-2!">
+            <!-- Loading indicator -->
+            <div *ngIf="loadingReports[filiale.id] && (!filiale.projekte || filiale.projekte.length === 0)"
+              class="flex justify-center items-center py-8">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+              <span class="ml-2 text-gray-600">Lade Projekte...</span>
+            </div>
+
+            <!-- Projekte table (only show when not loading and projects exist) -->
+            <div class="projekte-table-wrapper" style="display: block; max-width: 100%; overflow-x: auto;">
+              <p-table *ngIf="!loadingReports[filiale.id] || (filiale.projekte && filiale.projekte.length > 0)"
+                [value]="getFilteredProjekte(filiale)" dataKey="id" [columns]="getProjekteVisibleColumns()" [reorderableColumns]="true" (onColReorder)="onProjekteColReorder($event)"
+                [scrollable]="true" scrollHeight="300px" scrollWidth="95rem" [tableStyle]="{ 'min-width': '100%' }">
+              <ng-template #header let-columns>
+                <tr>
+                  <th class="rounded-l-lg">
+                    <div class="flex space-x-2 items-center">
+                      <span>Projekt</span>
+                      <app-icon name="table_sort" class="w-3 cursor-pointer" [class.text-primary-500]="projektSortField === filiale.id + '_name'" (click)="onProjektSort('name', filiale)" />
+                    </div>
+                  </th>
+                  <th *ngFor="let col of columns" pReorderableColumn>
+                    <div class="flex gap-x-2 items-center">
+                      <div class="flex space-x-2 items-center">
+                        <span>{{ col.header }}</span>
+                        <app-icon name="table_sort" class="w-3 cursor-pointer" [class.text-primary-500]="projektSortField === filiale.id + '_' + col.field" (click)="onProjektSort(col.field, filiale)" />
+                      </div>
+                      <span class="items-center cursor-pointer text-xs inline-flex relative" 
+                        (click)="openProjekteColumnFilter(col.field, filiale, $event); $event.stopPropagation()">
+                        <svg class="w-3 h-3"
+                          [class.text-green-500]="getProjekteColumnFilterValue(col.field) && getProjekteColumnFilterValue(col.field).length > 0"
+                          [class.text-white]="!getProjekteColumnFilterValue(col.field) || getProjekteColumnFilterValue(col.field).length === 0"
+                          fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                      </span>
+                    </div>
+                  </th>
+                  <th class="rounded-r-lg">
+                    <div class="flex space-x-2 items-center justify-end cursor-pointer">
+                      <span (click)="projekteColumnsPopover.toggle($event)">Settings</span>
+                      <span class="pi pi-cog text-sm!" (click)="projekteColumnsPopover.toggle($event)"></span>
+                    </div>
+                  </th>
+                </tr>
+              </ng-template>
+
+              <ng-template #body let-projekt let-columns="columns">
+                <tr class="bg-white">
+                  <td class="rounded-l-lg">{{ projekt.name }}</td>
+                  <td *ngFor="let col of columns">
+                    <ng-container [ngSwitch]="col.field">
+                      <!-- Special formatting for zeitraum -->
+                      <ng-container *ngSwitchCase="'zeitraum'">
+                        <span
+                          ><strong>{{ projekt.calendarWeek }}</strong> {{ projekt.zeitraum }}</span
+                        >
+                      </ng-container>
+
+                      <!-- Special formatting for status -->
+                      <ng-container *ngSwitchCase="'status'">
+                        <span
+                          *ngIf="projekt?.status?.name"
+                          class="text-white w-[70px] uppercase h-[23px] text-xs rounded-sm flex items-center justify-center"
+                          [style.background-color]="projekt.status?.color"
+                        >
+                          {{ projekt.status?.name }}
+                        </span>
+                      </ng-container>
+
+                      <!-- Special formatting for filter_frage boolean -->
+                      <ng-container *ngSwitchCase="'filter_frage'">
+                        <span>{{ projekt.filter_frage ? 'Ja' : 'Nein' }}</span>
+                      </ng-container>
+
+                      <!-- Default formatting -->
+                      <ng-container *ngSwitchDefault>
+                        {{ projekt[col.field] }}
+                      </ng-container>
+                    </ng-container>
+                  </td>
+                  <td class="rounded-r-lg">
+                    <div class="flex space-x-3 justify-end">
+                      <app-icon name="resizeable_eye" class="w-5 h-5 flex items-center cursor-pointer text-primary-500" title="View Details" (click)="viewReportDetails(projekt)" />
+                      <app-favorite-toggle class="h-5 w-5 flex-shrink-0" [isFavorite]="projekt.isFavorite" (favoriteChange)="onFavoriteChanged($event, projekt)" />
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template #emptymessage>
+                <tr>
+                  <td colspan="8" class="bg-white">Es sind noch keine Projekte für diese Filiale vorhanden.</td>
+                </tr>
+              </ng-template>
+            </p-table>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="5" class="text-center p-4">Keine Filialen gefunden. Bitte passen Sie Ihre Suche an oder klicken Sie auf 'Alle Filialen anzeigen'.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</section>
+
+<!-- Column settings popovers -->
+<p-popover #filialenColumnsPopover>
+  <p-multiselect
+    display="chip"
+    [options]="filialenCols"
+    [(ngModel)]="selectedFilialenColumns"
+    (onChange)="onFilialenColumnsChange($event.value)"
+    optionLabel="header"
+    selectedItemsLabel="{0} columns selected"
+    [style]="{ 'min-width': '200px' }"
+    placeholder="Choose Columns"
+  />
+</p-popover>
+
+<p-popover #projekteColumnsPopover>
+  <p-multiselect
+    display="chip"
+    [options]="projekteCols"
+    [(ngModel)]="selectedProjekteColumns"
+    (onChange)="onProjekteColumnsChange($event.value)"
+    optionLabel="header"
+    selectedItemsLabel="{0} columns selected"
+    [style]="{ 'min-width': '200px' }"
+    placeholder="Choose Columns"
+  />
+</p-popover>
+
+<!-- Filialen Column Filter Popover -->
+<p-popover #filialenColumnFilterPopover>
+  <div class="flex flex-col">
+    <div class="flex items-center justify-between mb-2">
+      <span class="font-semibold text-sm">Filter</span>
+      <button type="button" (click)="filialenColumnFilterPopover.hide()" class="text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <p-multiselect 
+      display="chip" 
+      [(ngModel)]="filialenColumnFilterValues[currentFilialenFilterField]"
+      [options]="getUniqueValuesForFilialenColumn(currentFilialenFilterField)"
+      [placeholder]="'Alle ' + getFilialenColumnHeader(currentFilialenFilterField)" 
+      [showClear]="true" 
+      [style]="{ 'min-width': '400px' }"
+      selectedItemsLabel="{0} ausgewählt" 
+      (ngModelChange)="onFilialenColumnFilterChange()"
+      [filter]="true">
+    </p-multiselect>
+  </div>
+</p-popover>
+
+<!-- Projekte Column Filter Popover -->
+<p-popover #projekteColumnFilterPopover>
+  <div class="flex flex-col">
+    <div class="flex items-center justify-between mb-2">
+      <span class="font-semibold text-sm">Filter</span>
+      <button type="button" (click)="projekteColumnFilterPopover.hide()" class="text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <p-multiselect 
+      display="chip" 
+      [(ngModel)]="projekteColumnFilterValues[currentProjekteFilterField]"
+      [options]="getUniqueValuesForProjekteColumn(currentProjekteFilterField)"
+      [placeholder]="'Alle ' + getProjekteColumnHeader(currentProjekteFilterField)" 
+      [showClear]="true" 
+      [style]="{ 'min-width': '400px' }"
+      selectedItemsLabel="{0} ausgewählt" 
+      (ngModelChange)="onProjekteColumnFilterChange()"
+      [filter]="true">
+    </p-multiselect>
+  </div>
+</p-popover>

@@ -1,0 +1,553 @@
+<section>
+  <!-- Back Button -->
+  <h2 translate class="flex justify-between items-center text-primary-700 mb-10 gap-6">
+    <div class="flex gap-2">
+      <app-icon name="incognito" class="w-8 h-8 flex-shrink-0 text-primary-700" />
+      <span class="text-[32px] font-bold font-dm leading-tight">Personal</span>
+    </div>
+    <button
+      type="button"
+      class="cursor-pointer pr-6 flex items-center justify-center text-primary-600 hover:text-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      (click)="navigateBackToStaffList()"
+      title="Zurück zur Übersicht"
+    >
+      <app-icon name="arrow-left" class="w-6 h-6"></app-icon>
+    </button>
+  </h2>
+
+  <!-- Loading state -->
+  <div *ngIf="loading" class="flex flex-col justify-center items-center h-64">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+    <p class="mt-4 text-gray-600">Lade Personal-Details...</p>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error" class="bg-red-50 p-4 rounded-md">
+    <p class="text-red-800">Es ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.</p>
+  </div>
+
+  <!-- Staff details -->
+  <div *ngIf="!loading && !error && staffMember">
+    <!-- Header with basic info - Updated to match card design -->
+    <div class="bg-white rounded-[25px] border border-[#DEE2E6] flex items-center gap-x-[10px] p-[15px] mb-6 h-[182px]">
+      <!-- Staff Image -->
+      <div class="w-[145px] h-[155px] rounded-[10px] overflow-hidden flex-shrink-0 bg-gray-50 cursor-pointer hover:opacity-90 transition-opacity">
+        <p-image [src]="staffMember.image" alt="{{ staffMember.firstName }} {{ staffMember.lastName }}" imageClass="w-full h-full object-cover" [preview]="true" />
+      </div>
+
+      <!-- Staff Info -->
+      <div class="flex flex-col gap-y-[30px] flex-1">
+        <div class="flex justify-between">
+          <div class="flex flex-col gap-y-[4px]">
+            <div class="flex items-center">
+              <input
+                type="text"
+                [(ngModel)]="staffMember.firstName"
+                class="text-primary-500 font-semibold text-[20px] truncate w-[115px] bg-transparent border-b border-gray-300 mr-2"
+                placeholder="Vorname"
+              />
+              <input
+                type="text"
+                [(ngModel)]="staffMember.lastName"
+                class="text-primary-500 font-semibold text-[20px] truncate w-[115px] bg-transparent border-b border-gray-300"
+                placeholder="Nachname"
+              />
+              <!-- Status Tabs -->
+              <div class="flex ml-4 border border-primary-500 rounded-[4px]">
+                <button
+                  *ngFor="let status of statuses; let last = last"
+                  type="button"
+                  class="px-4 py-1 rounded-[4px] text-[14px] font-extrabold font-dm"
+                  [ngClass]="{
+                    'bg-primary-500 text-white': staffMember.status?.toLowerCase() === status.name.toLowerCase(),
+                    'bg-white text-primary-500': staffMember.status?.toLowerCase() !== status.name.toLowerCase(),
+                  }"
+                  [style.marginRight.px]="last ? 0 : 8"
+                  (click)="onStatusChange(status.name)"
+                >
+                  {{ status.name }}
+                </button>
+              </div>
+            </div>
+            <span class="text-gray-500 text-[12px] whitespace-nowrap">
+              Geb.
+              <input type="text" [(ngModel)]="staffMember.dateOfBirth" class="bg-transparent border-b border-gray-300 w-[120px] ml-1" placeholder="Geburtsdatum" />
+            </span>
+          </div>
+          <div class="flex flex-col items-end">
+            <div class="flex gap-x-2">
+              <a [href]="'mailto:' + staffMember.email">
+                <app-icon name="envelope" class="w-[19px] h-[19px] cursor-pointer text-primary-500 flex items-center" title="Mail schicken" />
+              </a>
+              <app-favorite-toggle class="h-[19px] w-[19px] flex-shrink-0" [isFavorite]="staffMember.isFavorite" (favoriteChange)="onFavoriteChanged($event, staffMember)" />
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-x-[75px]">
+          <div class="text-primary-600 leading-tight text-[14px]">
+            <p class="truncate">{{ staffMember.email }}</p>
+            <input type="text" [(ngModel)]="staffMember.phone" class="truncate w-full bg-transparent border-b border-gray-300 mb-2" placeholder="Telefon" />
+            <input type="text" [(ngModel)]="staffMember.website" class="truncate w-full bg-transparent border-b border-gray-300 mb-2" placeholder="HP: Webseite" />
+            <p class="truncate">{{ staffMember.country }}</p>
+          </div>
+          <div class="flex gap-x-[60px]">
+            <div class="text-primary-600 leading-tight text-[14px]">
+              <p class="truncate font-semibold">Hauptadresse</p>
+              <input type="text" [(ngModel)]="staffMember.address" class="truncate w-full bg-transparent border-b border-gray-300 mb-2" placeholder="Straße und Hausnummer" />
+              <input type="text" [(ngModel)]="staffMember.postalCode" class="truncate w-full bg-transparent border-b border-gray-300 mb-2" placeholder="PLZ" />
+              <input type="text" [(ngModel)]="staffMember.country" class="truncate w-full bg-transparent border-b border-gray-300 mb-2" placeholder="Land" />
+            </div>
+            <div class="text-primary-600 leading-tight text-[14px]">
+              <p class="truncate font-semibold">Abweichende lieferadresse</p>
+              <input type="text" [(ngModel)]="staffMember.deliveryAddress" class="truncate w-full bg-transparent border-b border-gray-300 mb-2" placeholder="Straße und Hausnummer" />
+              <input type="text" [(ngModel)]="staffMember.deliveryPostalCode" class="truncate w-full bg-transparent border-b border-gray-300 mb-2" placeholder="PLZ" />
+              <input type="text" [(ngModel)]="staffMember.deliveryCountry" class="truncate w-full bg-transparent border-b border-gray-300 mb-2" placeholder="Land" />
+            </div>
+            <div class="text-primary-600 leading-tight text-[14px]">
+              <p class="truncate font-semibold">Zweitwohnsitz</p>
+              <input type="text" [(ngModel)]="staffMember.secondaryResidence" class="truncate w-full bg-transparent border-b border-gray-300 mb-2" placeholder="Zweitwohnsitz" />
+              <input type="text" [(ngModel)]="staffMember.secondaryPostalCode" class="truncate w-full bg-transparent border-b border-gray-300 mb-2" placeholder="PLZ" />
+              <input type="text" [(ngModel)]="staffMember.secondaryCountry" class="truncate w-full bg-transparent border-b border-gray-300 mb-2" placeholder="Land" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Save button for header section -->
+    <div class="flex justify-end my-4 mr-4">
+      <button
+        type="button"
+        (click)="saveHeaderData()"
+        [disabled]="savingHeader"
+        class="px-4 py-2 bg-[#66BC06] flex items-center justify-center gap-x-[8px] hover:bg-green-600 text-white font-dm cursor-pointer text-[14px] rounded-md transition-colors duration-200 disabled:bg-gray-300 h-[35px] w-[284px]"
+      >
+        <div *ngIf="savingHeader" class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+        <app-icon *ngIf="!savingHeader" name="save" class="text-white w-[11px] h-[11px]" />
+        <span>{{ savingHeader ? 'Speichern...' : 'Stammdaten speichern' }}</span>
+      </button>
+    </div>
+    <!-- Accordion sections -->
+    <p-accordion multiple="true" [(value)]="activeAccordionValue">
+      <!-- Vertragsliches section -->
+      <p-accordion-panel value="0">
+        <p-accordion-header>Vertragsliches</p-accordion-header>
+        <p-accordion-content>
+          <div class="flex gap-x-[200px] text-[14px]">
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <input type="checkbox" [checked]="hasContractual(1)" (change)="toggleContractual(1, $event.target.checked)" id="gewerbeschein" class="accent-primary-500" />
+                <label for="gewerbeschein" class="flex items-center cursor-pointer">
+                  <span>Gewerbeschein</span>
+                </label>
+              </div>
+              <div class="flex items-center gap-2 mb-2">
+                <input type="checkbox" [checked]="hasContractual(2)" (change)="toggleContractual(2, $event.target.checked)" id="dsvgo" class="accent-primary-500" />
+                <label for="dsvgo" class="flex items-center cursor-pointer">
+                  <span>DSVGO</span>
+                </label>
+              </div>
+              <div class="flex items-center gap-2 mb-2">
+                <input type="checkbox" [checked]="hasContractual(3)" (change)="toggleContractual(3, $event.target.checked)" id="clearing" class="accent-primary-500" />
+                <label for="clearing" class="flex items-center cursor-pointer">
+                  <span>Clearing</span>
+                </label>
+              </div>
+            </div>
+            <div class="flex flex-col gap-y-2">
+              <label class="mb-1">
+                UST-ID:
+                <input type="text" [(ngModel)]="staffMember.taxId" class="bg-transparent border-b border-gray-300 w-[180px] ml-2" placeholder="UST-ID" />
+              </label>
+              <label>
+                STEUER-NR:
+                <input type="text" [(ngModel)]="staffMember.taxNumber" class="bg-transparent border-b border-gray-300 w-[180px] ml-2" placeholder="STEUER-NR" />
+              </label>
+            </div>
+          </div>
+
+          <!-- Save button -->
+          <div class="flex justify-end mt-6">
+            <button
+              type="button"
+              (click)="saveContractualData()"
+              [disabled]="savingContractual"
+              class="px-4 py-2 bg-[#66BC06] flex items-center justify-center gap-x-[8px] hover:bg-green-600 text-white font-dm cursor-pointer text-[14px] rounded-md transition-colors duration-200 disabled:bg-gray-300 h-[35px] w-[284px]"
+            >
+              <div *ngIf="savingContractual" class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+              <app-icon *ngIf="!savingContractual" name="save" class="text-white w-[11px] h-[11px]" />
+              <span>{{ savingContractual ? 'Speichern...' : 'Vertragsliches speichern' }}</span>
+            </button>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+
+      <!-- Qualifikation section - Updated to use API data -->
+      <p-accordion-panel value="1">
+        <p-accordion-header>Qualifikation</p-accordion-header>
+        <p-accordion-content>
+          <div class="flex flex-col gap-y-[24px]">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div *ngFor="let qualification of staffMember.qualifications" class="text-[14px]">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="w-[10px] h-[10px] rounded-full bg-primary-500"></span>
+                  <span>{{ qualification.name }}</span>
+                  <!-- Kommentar input next to qualification name -->
+                  <label class="flex items-center gap-x-2 ml-4 flex-1">
+                    <span>Kommentar:</span>
+                    <input type="text" [(ngModel)]="qualification.comment" class="ml-2 bg-transparent border-b border-gray-300 flex-1" placeholder="Kommentar" />
+                  </label>
+                </div>
+                <!-- Render only specializations for this qualification -->
+                <div *ngFor="let spec of getSpecializationsForJobType(qualification)" class="flex items-center gap-2 mb-2 ml-6">
+                  <span class="w-[10px] h-[10px] rounded-full bg-green-500"></span>
+                  <span>{{ spec.name }}</span>
+                </div>
+              </div>
+            </div>
+            <!-- Show education from API -->
+            <div>
+              <span class="font-bold">Ausbildung:</span>
+              <div *ngFor="let edu of staffMember.education; let i = index" class="flex gap-4 items-center mb-2">
+                <input type="text" [(ngModel)]="edu.qualification" class="bg-transparent border-b border-gray-300 w-[180px]" placeholder="Qualifikation" />
+                <input type="text" [(ngModel)]="edu.institution" class="bg-transparent border-b border-gray-300 w-[180px]" placeholder="Institution" />
+                <input type="date" [(ngModel)]="edu.graduationDate" class="bg-transparent border-b border-gray-300 w-[150px]" placeholder="Abschlussdatum" />
+                <button type="button" (click)="removeEducation(i)" class="p-1 bg-red-500 text-white rounded-full hover:bg-red-600 flex items-center justify-center cursor-pointer transition-colors">
+                  <app-icon name="cross" class="text-white w-[11px] h-[11px]" />
+                </button>
+              </div>
+              <!-- Add new education button -->
+              <button
+                type="button"
+                (click)="showAddEducationForm = true"
+                class="mt-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-md text-gray-600 hover:text-gray-800 hover:border-gray-400 transition-colors flex items-center gap-2"
+              >
+                <app-icon name="plus" class="w-4 h-4" />
+                <span>Ausbildung hinzufügen</span>
+              </button>
+
+              <!-- Add education form -->
+              <div *ngIf="showAddEducationForm" class="mt-4 p-4 border border-gray-200 rounded-md bg-gray-50">
+                <div class="flex gap-4 items-center">
+                  <label class="flex items-center gap-2">
+                    <span>Qualifikation:</span>
+                    <input type="text" [(ngModel)]="newEducation.qualification" class="bg-white border border-gray-300 rounded px-2 py-1 w-[180px]" placeholder="Qualifikation" />
+                  </label>
+                  <label class="flex items-center gap-2">
+                    <span>Institution:</span>
+                    <input type="text" [(ngModel)]="newEducation.institution" class="bg-white border border-gray-300 rounded px-2 py-1 w-[180px]" placeholder="Institution" />
+                  </label>
+                  <label class="flex items-center gap-2">
+                    <span>Abschlussdatum:</span>
+                    <input type="date" [(ngModel)]="newEducation.graduationDate" class="bg-white border border-gray-300 rounded px-2 py-1 w-[150px]" />
+                  </label>
+                  <button type="button" (click)="confirmAddEducation()" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors">Hinzufügen</button>
+                  <button type="button" (click)="cancelAddEducation()" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors">Schließen</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save button -->
+          <div class="flex justify-end mt-6">
+            <button
+              type="button"
+              (click)="saveQualificationData()"
+              [disabled]="savingQualification"
+              class="px-4 py-2 bg-[#66BC06] flex items-center justify-center gap-x-[8px] hover:bg-green-600 text-white font-dm cursor-pointer text-[14px] rounded-md transition-colors duration-200 disabled:bg-gray-300 h-[35px] w-[284px]"
+            >
+              <div *ngIf="savingQualification" class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+              <app-icon *ngIf="!savingQualification" name="save" class="text-white w-[11px] h-[11px]" />
+              <span>{{ savingQualification ? 'Speichern...' : 'Qualifikation speichern' }}</span>
+            </button>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+
+      <!-- Referenzen section - Updated with API data -->
+      <p-accordion-panel value="2">
+        <p-accordion-header>Referenzen</p-accordion-header>
+        <p-accordion-content>
+          <div class="flex flex-col gap-y-4">
+            <div *ngFor="let reference of staffMember.references; let i = index" class="border-b border-gray-200 pb-4">
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <label class="block mb-1 font-bold text-[16px]">
+                    Unternehmen:
+                    <input type="text" [(ngModel)]="reference.company" class="ml-2 bg-transparent border-b border-gray-300 w-[180px]" placeholder="Unternehmen" />
+                  </label>
+                  <label class="block mb-1">
+                    Tätigkeit:
+                    <input type="text" [(ngModel)]="reference.activity" class="ml-2 bg-transparent border-b border-gray-300 w-[180px]" placeholder="Tätigkeit" />
+                  </label>
+                  <label class="block mb-1">
+                    Branche:
+                    <input type="text" [(ngModel)]="reference.industry" class="ml-2 bg-transparent border-b border-gray-300 w-[180px]" placeholder="Branche" />
+                  </label>
+                  <div class="flex gap-2 mb-1">
+                    <label>
+                      Zeitraum:
+                      <input type="date" [(ngModel)]="reference.fromDate" class="ml-2 bg-transparent border-b border-gray-300 w-[130px]" placeholder="Start" />
+                      -
+                      <input type="date" [(ngModel)]="reference.toDate" class="ml-2 bg-transparent border-b border-gray-300 w-[130px]" placeholder="Ende" />
+                    </label>
+                  </div>
+                </div>
+                <button type="button" (click)="removeReference(i)" class="p-1 bg-red-500 text-white rounded-full hover:bg-red-600 flex items-center justify-center cursor-pointer transition-colors">
+                  <app-icon name="cross" class="text-white w-[11px] h-[11px]" />
+                </button>
+              </div>
+            </div>
+
+            <!-- Add new reference button -->
+            <button
+              type="button"
+              (click)="showAddReferenceForm = true"
+              class="mt-4 px-4 py-2 border-2 border-dashed border-gray-300 rounded-md text-gray-600 hover:text-gray-800 hover:border-gray-400 transition-colors flex items-center gap-2"
+            >
+              <app-icon name="plus" class="w-4 h-4" />
+              <span>Referenz hinzufügen</span>
+            </button>
+
+            <!-- Add reference form -->
+            <div *ngIf="showAddReferenceForm" class="mt-4 p-4 border border-gray-200 rounded-md bg-gray-50">
+              <div class="flex flex-col gap-4">
+                <div class="flex gap-4 items-center">
+                  <label class="flex items-center gap-2">
+                    <span>Unternehmen:</span>
+                    <input type="text" [(ngModel)]="newReference.company" class="bg-white border border-gray-300 rounded px-2 py-1 w-[180px]" placeholder="Unternehmen" />
+                  </label>
+                  <label class="flex items-center gap-2">
+                    <span>Tätigkeit:</span>
+                    <input type="text" [(ngModel)]="newReference.activity" class="bg-white border border-gray-300 rounded px-2 py-1 w-[180px]" placeholder="Tätigkeit" />
+                  </label>
+                </div>
+                <div class="flex gap-4 items-center">
+                  <label class="flex items-center gap-2">
+                    <span>Branche:</span>
+                    <input type="text" [(ngModel)]="newReference.industry" class="bg-white border border-gray-300 rounded px-2 py-1 w-[180px]" placeholder="Branche" />
+                  </label>
+                  <label class="flex items-center gap-2">
+                    <span>Von:</span>
+                    <input type="date" [(ngModel)]="newReference.fromDate" class="bg-white border border-gray-300 rounded px-2 py-1 w-[130px]" />
+                  </label>
+                  <label class="flex items-center gap-2">
+                    <span>Bis:</span>
+                    <input type="date" [(ngModel)]="newReference.toDate" class="bg-white border border-gray-300 rounded px-2 py-1 w-[130px]" />
+                  </label>
+                </div>
+                <div class="flex gap-2">
+                  <button type="button" (click)="confirmAddReference()" class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors">Hinzufügen</button>
+                  <button type="button" (click)="cancelAddReference()" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors">Schließen</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save button -->
+          <div class="flex justify-end mt-6">
+            <button
+              type="button"
+              (click)="saveReferencesData()"
+              [disabled]="savingReferences"
+              class="px-4 py-2 bg-[#66BC06] flex items-center justify-center gap-x-[8px] hover:bg-green-600 text-white font-dm cursor-pointer text-[14px] rounded-md transition-colors duration-200 disabled:bg-gray-300 h-[35px] w-[284px]"
+            >
+              <div *ngIf="savingReferences" class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+              <app-icon *ngIf="!savingReferences" name="save" class="text-white w-[11px] h-[11px]" />
+              <span>{{ savingReferences ? 'Speichern...' : 'Referenzen speichern' }}</span>
+            </button>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+
+      <!-- Sprache section - Updated with API data -->
+      <p-accordion-panel value="3">
+        <p-accordion-header>Sprache</p-accordion-header>
+        <p-accordion-content [ngStyle]="{ overflow: 'visible' }">
+          <div class="space-y-4">
+            <!-- Existing languages -->
+            <div *ngFor="let language of staffMember.languages; let i = index" class="flex items-center gap-4 p-3 border border-gray-200 rounded-md">
+              <!-- Language dropdown -->
+              <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Sprache</label>
+                <p-dropdown
+                  [options]="getAvailableLanguages()"
+                  optionLabel="name"
+                  optionValue="id"
+                  [ngModel]="language.languageId"
+                  (onChange)="onLanguageChange(language, $event)"
+                  placeholder="Sprache auswählen"
+                  class="w-full"
+                >
+                </p-dropdown>
+              </div>
+
+              <!-- Level dropdown -->
+              <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Niveau</label>
+                <p-dropdown
+                  [options]="languageLevels"
+                  optionLabel="name"
+                  optionValue="id"
+                  [ngModel]="language.levelId"
+                  (onChange)="onLevelChange(language, $event)"
+                  placeholder="Niveau auswählen"
+                  class="w-full"
+                >
+                </p-dropdown>
+              </div>
+
+              <!-- Remove button -->
+              <button type="button" (click)="removeLanguage(i)" class="p-1 bg-red-500 text-white rounded-full hover:bg-red-600 flex items-center justify-center cursor-pointer transition-colors">
+                <app-icon name="cross" class="text-white w-[11px] h-[11px]" />
+              </button>
+            </div>
+
+            <!-- Add new language button -->
+            <button
+              type="button"
+              (click)="addLanguage()"
+              class="w-full p-3 border-2 border-dashed border-gray-300 rounded-md text-gray-600 hover:text-gray-800 hover:border-gray-400 transition-colors flex items-center justify-center gap-2"
+            >
+              <app-icon name="plus" class="w-4 h-4" />
+              <span>Sprache hinzufügen</span>
+            </button>
+
+            <!-- Fallback if no language data -->
+            <div *ngIf="!staffMember.languages || staffMember.languages.length === 0" class="text-gray-500 text-center py-4">
+              <p>Keine Sprachen hinzugefügt</p>
+              <button type="button" (click)="addLanguage()" class="mt-2 px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors">Erste Sprache hinzufügen</button>
+            </div>
+          </div>
+
+          <!-- Save button -->
+          <div class="flex justify-end mt-6">
+            <button
+              type="button"
+              (click)="saveLanguagesData()"
+              [disabled]="savingLanguages"
+              class="px-4 py-2 bg-[#66BC06] flex items-center justify-center gap-x-[8px] hover:bg-green-600 text-white font-dm cursor-pointer text-[14px] rounded-md transition-colors duration-200 disabled:bg-gray-300 h-[35px] w-[284px]"
+            >
+              <div *ngIf="savingLanguages" class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+              <app-icon *ngIf="!savingLanguages" name="save" class="text-white w-[11px] h-[11px]" />
+              <span>{{ savingLanguages ? 'Speichern...' : 'Sprachen speichern' }}</span>
+            </button>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+
+      <!-- Dateien section - Updated with API data -->
+      <p-accordion-panel value="4">
+        <p-accordion-header>Dateien</p-accordion-header>
+        <p-accordion-content>
+          <div class="space-y-6">
+            <!-- File Categories -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <!-- Portrait -->
+              <div class="relative">
+                <p class="mb-2 font-semibold">Portrait</p>
+                <div class="relative h-[155px] w-[125px] overflow-hidden rounded-[10px] border border-gray-300">
+                  <p-image [src]="staffMember.files.portrait?.file?.path || staffMember.image" alt="Portrait" imageClass="w-full h-full object-cover" [preview]="true" />
+                  <!-- Delete button -->
+                  <button
+                    *ngIf="staffMember.files.portrait"
+                    type="button"
+                    (click)="deleteFile('portrait')"
+                    [disabled]="savingFiles"
+                    class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 flex items-center justify-center cursor-pointer transition-colors"
+                  >
+                    <app-icon name="cross" class="text-white w-[11px] h-[11px]" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Full Body Shot -->
+              <div class="relative">
+                <p class="mb-2 font-semibold">Ganzkörperaufnahme</p>
+                <div class="relative h-[155px] w-[125px] overflow-hidden rounded-[10px] border border-gray-300">
+                  <p-image *ngIf="staffMember.files.fullBodyShot" [src]="staffMember.files.fullBodyShot.file.path" alt="Ganzkörperaufnahme" imageClass="w-full h-full object-cover" [preview]="true" />
+                  <div *ngIf="!staffMember.files.fullBodyShot" class="w-full h-full flex items-center justify-center bg-gray-100">
+                    <app-icon name="image" class="w-8 h-8 text-gray-400" />
+                  </div>
+                  <!-- Delete button -->
+                  <button
+                    *ngIf="staffMember.files.fullBodyShot"
+                    type="button"
+                    (click)="deleteFile('full_body_shot')"
+                    [disabled]="savingFiles"
+                    class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 flex items-center justify-center cursor-pointer transition-colors"
+                  >
+                    <app-icon name="cross" class="text-white w-[11px] h-[11px]" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Resume -->
+              <div class="relative">
+                <p class="mb-2 font-semibold">Lebenslauf</p>
+                <div class="relative h-[155px] w-[125px] flex items-center justify-center border border-gray-300 rounded-[10px]">
+                  <div *ngIf="staffMember.files.resume" class="text-red-600 p-2 bg-red-50 rounded">
+                    <a [href]="staffMember.files.resume.file.path" target="_blank" class="block">
+                      <span class="text-xs">PDF</span>
+                    </a>
+                  </div>
+                  <div *ngIf="!staffMember.files.resume" class="text-gray-400">
+                    <app-icon name="file" class="w-8 h-8 mx-auto mb-1" />
+                    <span class="text-xs">Keine Datei</span>
+                  </div>
+                  <!-- Delete button -->
+                  <button
+                    *ngIf="staffMember.files.resume"
+                    type="button"
+                    (click)="deleteFile('resume')"
+                    [disabled]="savingFiles"
+                    class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 flex items-center justify-center cursor-pointer transition-colors"
+                  >
+                    <app-icon name="cross" class="text-white w-[11px] h-[11px]" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Additional Attachments -->
+              <div class="relative">
+                <p class="mb-2 font-semibold">Zusätzliche Anhänge</p>
+                <div class="space-y-2 max-h-[200px] overflow-y-auto">
+                  <div *ngFor="let attachment of staffMember.files.additionalAttachments; let i = index" class="relative">
+                    <div class="h-[80px] w-[100px] flex items-center justify-center border border-gray-300 rounded-[8px]">
+                      <a [href]="attachment.file.path" target="_blank" class="text-red-600 p-1 bg-red-50 rounded">
+                        <span class="text-xs">Anhang {{ i + 1 }}</span>
+                      </a>
+                      <!-- Delete button -->
+                      <button
+                        *ngIf="staffMember.files.additionalAttachments"
+                        type="button"
+                        (click)="deleteFile('additional_attachments', i)"
+                        [disabled]="savingFiles"
+                        class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 flex items-center justify-center cursor-pointer transition-colors"
+                      >
+                        <app-icon name="cross" class="text-white w-[11px] h-[11px]" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save button -->
+          <div class="flex justify-end mt-6">
+            <button
+              type="button"
+              (click)="saveFilesData()"
+              [disabled]="savingFiles"
+              class="px-4 py-2 bg-[#66BC06] flex items-center justify-center gap-x-[8px] hover:bg-green-600 text-white font-dm cursor-pointer text-[14px] rounded-md transition-colors duration-200 disabled:bg-gray-300 h-[35px] w-[284px]"
+            >
+              <div *ngIf="savingFiles" class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+              <app-icon *ngIf="!savingFiles" name="save" class="text-white w-[11px] h-[11px]" />
+              <span>{{ savingFiles ? 'Speichern...' : 'Dateien speichern' }}</span>
+            </button>
+          </div>
+        </p-accordion-content>
+      </p-accordion-panel>
+    </p-accordion>
+  </div>
+</section>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Willkommen bei {{app_name}}</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .container { max-width: 600px; margin: auto; background: #f9f9f9; border-radius: 8px; padding: 32px; }
+    .header { background: #00838f; color: #fff; padding: 20px; border-radius: 8px 8px 0 0; font-size: 22px; font-weight: bold; }
+    .content { background: #fff; padding: 20px; border-radius: 0 0 8px 8px; }
+    .credentials { background: #eff6ff; border: 1px solid #dbeafe; border-radius: 4px; margin: 20px 0; padding: 14px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">Willkommen bei {{app_name}}</div>
+    <div class="content">
+      <p>Hallo {{firstName}},</p>
+      <p>Ihr Zugang zu <b>{{app_name}}</b> wurde erfolgreich erstellt.</p>
+      <div class="credentials">
+        <strong>Ihre Zugangsdaten:</strong><br>
+        E-Mail: <b>{{to}}</b><br>
+        Passwort: <b>{{password}}</b>
+      </div>
+      <p>Bitte ändern Sie Ihr Passwort nach dem ersten Login über die Einstellungen aus Sicherheitsgründen.</p>
+      <p>Viele Grüße,<br><b>Ihr {{app_name}}-Team</b></p>
+    </div>
+  </div>
+</body>
+</html>
