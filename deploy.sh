@@ -74,6 +74,24 @@ npm run build
 echo -e "${GREEN}Backend build complete!${NC}"
 
 # ============================================
+# Setup Database
+# ============================================
+echo -e "\n${BLUE}Setting up database...${NC}"
+
+# Check if .env exists, if not create from example
+if [ ! -f ".env" ]; then
+    echo -e "${YELLOW}Creating .env from env-example-relational...${NC}"
+    cp env-example-relational .env
+    echo -e "${YELLOW}⚠️  Please update .env with your database credentials${NC}"
+fi
+
+# Run migrations
+echo -e "${YELLOW}Running database migrations...${NC}"
+npm run migration:run || true
+
+echo -e "${GREEN}Database setup complete!${NC}"
+
+# ============================================
 # Build HeadOffice
 # ============================================
 echo -e "\n${BLUE}[2/4] Building HeadOffice...${NC}"
